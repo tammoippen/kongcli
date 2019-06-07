@@ -9,6 +9,21 @@ description = "Interact with kong's admin api."
 authors = ["Tammo Ippen <tammo.ippen@posteo.de>"]
 license = "MIT"
 
+readme = "README.md"
+repository = "https://github.com/tammoippen/kongcli"
+homepage = "https://github.com/tammoippen/kongcli"
+keywords=["kong", "api", "microservice", "terminal", "admin"]
+classifiers=[
+    # Trove classifiers
+    # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3 :: Only",
+]
+
 [tool.poetry.scripts]
 kongcli = 'kongcli._cli:cli'
 
