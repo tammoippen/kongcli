@@ -1,0 +1,21 @@
+# Python 3
+__pycache__/
+.coverage*
+.hypothesis/
+.mypy_cache/
+.pytest_cache/
+.benchmarks/
+poetry.lock
+
+# Python Packaging
+*.egg-info
+dist/
+
+# macOS
+.DS_Store
+
+# Visual Studio Code
+.vscode/
+
+# Environment
+.venv/
