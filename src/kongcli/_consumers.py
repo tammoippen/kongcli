@@ -1,12 +1,12 @@
 from datetime import datetime, timezone
 import sys
-from typing import Optional
+from typing import Optional, Tuple
 
 import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._kong import add, all_of, delete, retrieve
+from ._kong import add, all_of, consumer_acls, consumer_add_group, consumer_delete_group, delete, retrieve
 
 
 @click.command()
@@ -105,8 +105,13 @@ def create_consumer(
 
 @click.command()
 @click.argument("id_username")
+@click.option(
+    "--acls/--no-acls",
+    default=False,
+    help="Get all acls for the user.",
+)
 @click.pass_context
-def retrieve_consumer(ctx: click.Context, id_username: str) -> None:
+def retrieve_consumer(ctx: click.Context, id_username: str, acls: bool) -> None:
     """Retrieve a specific consumer."""
 
     apikey = ctx.obj["apikey"]
@@ -118,7 +123,48 @@ def retrieve_consumer(ctx: click.Context, id_username: str) -> None:
         user["created_at"] = datetime.fromtimestamp(
             user["created_at"] / 1000, timezone.utc
         )
+
+    if acls:
+        user['acls'] = '\n'.join(consumer_acls(url, apikey, id_username))
     print(tabulate([user], headers="keys", tablefmt=tablefmt))
+
+
+@click.command()
+@click.argument("id_username")
+@click.argument("groups", nargs=-1)
+@click.pass_context
+def add_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) -> None:
+    """Add the given groups to the consumer."""
+
+    if not groups:
+        return
+
+    apikey = ctx.obj["apikey"]
+    url = ctx.obj["url"]
+
+    for group in groups:
+        consumer_add_group(url, apikey, id_username, group)
+
+    ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
+
+
+@click.command()
+@click.argument("id_username")
+@click.argument("groups", nargs=-1)
+@click.pass_context
+def delete_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) -> None:
+    """Delete the given groups from the consumer."""
+
+    if not groups:
+        return
+
+    apikey = ctx.obj["apikey"]
+    url = ctx.obj["url"]
+
+    for group in groups:
+        consumer_delete_group(url, apikey, id_username, group)
+
+    ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
 
 
 @click.command()
@@ -151,3 +197,5 @@ consumers.add_command(list_consumers, name="list")
 consumers.add_command(create_consumer, name="create")
 consumers.add_command(retrieve_consumer, name="retrieve")
 consumers.add_command(delete_consumer, name="delete")
+consumers.add_command(add_groups, name="add-groups")
+consumers.add_command(delete_groups, name="delete-groups")

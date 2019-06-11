@@ -96,3 +96,32 @@ def delete(resource: str, url: str, apikey: str, id_: str) -> None:
     logger.debug(f"Delete `{resource}` with id = `{id_}` ... ")
     resp = requests.delete(f"{url}/{resource}/{id_}", headers=headers)
     resp.raise_for_status()  # HTTP 204 No Content if everything is ok
+
+
+# consumer specific
+
+def consumer_acls(url: str, apikey: str, id_: str) -> List[str]:
+    headers = {"apikey": apikey}
+    logger.debug(f"Get acls of consumer with id = `{id_}` ... ")
+    # TODO: paginate?
+    resp = requests.get(f'{url}/consumers/{id_}/acls', headers=headers)
+    resp.raise_for_status()
+    assert "application/json" in resp.headers["Content-Type"]
+    data = resp.json()
+    return [acl['group'] for acl in data.get('data', [])]
+
+
+def consumer_add_group(url: str, apikey: str, id_: str, group: str) -> None:
+    headers = {"apikey": apikey, 'content-type': 'application/json'}
+    logger.debug(f"Add group `{group}` to consumer with id = `{id_}` ... ")
+    resp = requests.post(f'{url}/consumers/{id_}/acls', headers=headers, json={'group': group})
+    resp.raise_for_status()
+    assert "application/json" in resp.headers["Content-Type"]
+    return resp.json()
+
+
+def consumer_delete_group(url: str, apikey: str, id_: str, group: str) -> None:
+    headers = {"apikey": apikey}
+    logger.debug(f"Delete group `{group}` from consumer with id = `{id_}` ... ")
+    resp = requests.delete(f'{url}/consumers/{id_}/acls/{group}', headers=headers)
+    resp.raise_for_status()  # HTTP 204 No Content if everything is ok
