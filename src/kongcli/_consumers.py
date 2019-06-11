@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import json
 import sys
 from typing import Optional, Tuple
 
@@ -6,7 +7,18 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._kong import add, all_of, consumer_acls, consumer_add_group, consumer_delete_group, delete, retrieve
+from ._kong import (
+    add,
+    all_of,
+    consumer_acls,
+    consumer_add_group,
+    consumer_basic_auths,
+    consumer_delete_group,
+    consumer_key_auths,
+    consumer_plugins,
+    delete,
+    retrieve,
+)
 
 
 @click.command()
@@ -34,7 +46,7 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
     data = []
     for c in consumers:
         cdata = {
-            "id": c['id'],
+            "id": c["id"],
             "custom_id": c.get("custom_id", ""),
             "username": c.get("username", ""),
             "acl_groups": set(),
@@ -105,13 +117,27 @@ def create_consumer(
 
 @click.command()
 @click.argument("id_username")
+@click.option("--acls/--no-acls", default=False, help="Get all acls for the user.")
 @click.option(
-    "--acls/--no-acls",
+    "--basic-auths/--no-basic-auths",
     default=False,
-    help="Get all acls for the user.",
+    help="Get all basic-auth for the user.",
+)
+@click.option(
+    "--key-auths/--no-key-auths", default=False, help="Get all key-auth for the user."
+)
+@click.option(
+    "--plugins/--no-plugins", default=False, help="Get all plugins for the user."
 )
 @click.pass_context
-def retrieve_consumer(ctx: click.Context, id_username: str, acls: bool) -> None:
+def retrieve_consumer(
+    ctx: click.Context,
+    id_username: str,
+    acls: bool,
+    basic_auths: bool,
+    key_auths: bool,
+    plugins: bool,
+) -> None:
     """Retrieve a specific consumer."""
 
     apikey = ctx.obj["apikey"]
@@ -125,7 +151,22 @@ def retrieve_consumer(ctx: click.Context, id_username: str, acls: bool) -> None:
         )
 
     if acls:
-        user['acls'] = '\n'.join(consumer_acls(url, apikey, id_username))
+        user["acls"] = "\n".join(consumer_acls(url, apikey, id_username))
+    if basic_auths:
+        user["basic_auth"] = "\n".join(
+            f'{ba["id"]}: {ba["username"]}:xxx'
+            for ba in consumer_basic_auths(url, apikey, id_username)
+        )
+    if key_auths:
+        user["key_auth"] = "\n".join(
+            f'{ba["id"]}: {ba["username"]}:xxx'
+            for ba in consumer_key_auths(url, apikey, id_username)
+        )
+    if plugins:
+        user["plugins"] = "\n\n".join(
+            f"{json.dumps(plugin, indent=2)}"
+            for plugin in consumer_plugins(url, apikey, id_username)
+        )
     print(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
@@ -152,7 +193,9 @@ def add_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) ->
 @click.argument("id_username")
 @click.argument("groups", nargs=-1)
 @click.pass_context
-def delete_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) -> None:
+def delete_groups(
+    ctx: click.Context, id_username: str, groups: Tuple[str, ...]
+) -> None:
     """Delete the given groups from the consumer."""
 
     if not groups:
