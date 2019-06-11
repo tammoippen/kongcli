@@ -1,6 +1,7 @@
 from functools import partial
 import json
 import sys
+from typing import Optional
 
 import click
 from loguru import logger
@@ -17,8 +18,14 @@ from ._session import LiveServerSession
 
 
 @click.group()
-@click.option("--url", envvar="KONG_BASE", help="Base url to kong.")
+@click.option("--url", envvar="KONG_BASE", help="Base url to kong.", required=True)
 @click.option("--apikey", envvar="KONG_APIKEY", help="API key for key-auth to kong.")
+@click.option("--basic", envvar="KONG_BASIC_USER", help="Basic auth username for kong.")
+@click.option(
+    "--passwd",
+    envvar="KONG_BASIC_PASSWD",
+    help="Basic auth password for kong. Is also prompted.",
+)
 @click.option(
     "--tablefmt",
     default="fancy_grid",
@@ -32,7 +39,14 @@ from ._session import LiveServerSession
 @click.option("-v", "--verbose", count=True, help="Add more verbose output.")
 @click.pass_context
 def cli(
-    ctx: click.Context, url: str, apikey: str, tablefmt: str, font: str, verbose: int
+    ctx: click.Context,
+    url: str,
+    apikey: Optional[str],
+    basic: Optional[str],
+    passwd: Optional[str],
+    tablefmt: str,
+    font: str,
+    verbose: int,
 ) -> None:
     """Interact with your kong admin api."""
     ctx.ensure_object(dict)
@@ -45,7 +59,12 @@ def cli(
         logger.add(sys.stdout, level="DEBUG")
 
     session = LiveServerSession(url)
-    session.headers.update({"apikey": apikey})
+    if apikey:
+        session.headers.update({"apikey": apikey})
+    if basic and not passwd:
+        passwd = click.prompt(f"Password for `{basic}`", hide_input=True)
+    if basic and passwd:
+        session.auth = (basic, passwd)
 
     ctx.obj["session"] = session
     ctx.obj["tablefmt"] = tablefmt

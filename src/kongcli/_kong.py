@@ -98,7 +98,9 @@ def delete(resource: str, session: requests.Session, id_: str) -> None:
 
 
 # consumer specific
-def _consumer_get(session: requests.Session, id_: str, kind: str) -> List[Dict[str, Any]]:
+def _consumer_get(
+    session: requests.Session, id_: str, kind: str
+) -> List[Dict[str, Any]]:
     logger.debug(f"Get `{kind}` of consumer with id = `{id_}` ... ")
     # TODO: paginate?
     resp = session.get(f"/consumers/{id_}/{kind}")
@@ -114,7 +116,9 @@ def consumer_acls(session: requests.Session, id_: str) -> List[str]:
     return [acl["group"] for acl in data]
 
 
-def consumer_add_group(session: requests.Session, id_: str, group: str) -> Dict[str, Any]:
+def consumer_add_group(
+    session: requests.Session, id_: str, group: str
+) -> Dict[str, Any]:
     headers = {"content-type": "application/json"}
     logger.debug(f"Add group `{group}` to consumer with id = `{id_}` ... ")
     resp = session.post(
