@@ -10,16 +10,15 @@ from ._kong import all_of
 @click.command()
 @click.pass_context
 def list_routes(ctx: click.Context) -> None:
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
     font = ctx.obj["font"]
 
     print_figlet("Routes", font=font, width=160)
 
-    services = all_of("services", url, apikey)
-    routes = all_of("routes", url, apikey)
-    plugins = all_of("plugins", url, apikey)
+    services = all_of("services", session)
+    routes = all_of("routes", session)
+    plugins = all_of("plugins", session)
 
     data = []
     for r in routes:

@@ -11,14 +11,13 @@ from ._kong import all_of
 @click.command()
 @click.pass_context
 def list_global_plugins(ctx: click.Context) -> None:
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
     font = ctx.obj["font"]
 
     print_figlet("Global Plugins", font=font, width=160)
 
-    plugins = all_of("plugins", url, apikey)
+    plugins = all_of("plugins", session)
 
     data = []
     for p in plugins:

@@ -30,18 +30,17 @@ from ._kong import (
 @click.pass_context
 def list_consumers(ctx: click.Context, full_keys: bool) -> None:
     """List all consumers along with relevant information."""
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
     font = ctx.obj["font"]
 
     print_figlet("Consumers", font=font, width=160)
 
-    consumers = all_of("consumers", url, apikey)
-    plugins = all_of("plugins", url, apikey)
-    acls = all_of("acls", url, apikey)
-    basic_auths = all_of("basic-auths", url, apikey)
-    key_auths = all_of("key-auths", url, apikey)
+    consumers = all_of("consumers", session)
+    plugins = all_of("plugins", session)
+    acls = all_of("acls", session)
+    basic_auths = all_of("basic-auths", session)
+    key_auths = all_of("key-auths", session)
 
     data = []
     for c in consumers:
@@ -102,12 +101,10 @@ def create_consumer(
         )
         raise click.Abort()
 
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
-    font = ctx.obj["font"]
 
-    user = add("consumers", url, apikey, username=username, custom_id=custom_id)
+    user = add("consumers", session, username=username, custom_id=custom_id)
     if "created_at" in user:
         user["created_at"] = datetime.fromtimestamp(
             user["created_at"] / 1000, timezone.utc
@@ -140,32 +137,31 @@ def retrieve_consumer(
 ) -> None:
     """Retrieve a specific consumer."""
 
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
 
-    user = retrieve("consumers", url, apikey, id_username)
+    user = retrieve("consumers", session, id_username)
     if "created_at" in user:
         user["created_at"] = datetime.fromtimestamp(
             user["created_at"] / 1000, timezone.utc
         )
 
     if acls:
-        user["acls"] = "\n".join(consumer_acls(url, apikey, id_username))
+        user["acls"] = "\n".join(consumer_acls(session, id_username))
     if basic_auths:
         user["basic_auth"] = "\n".join(
             f'{ba["id"]}: {ba["username"]}:xxx'
-            for ba in consumer_basic_auths(url, apikey, id_username)
+            for ba in consumer_basic_auths(session, id_username)
         )
     if key_auths:
         user["key_auth"] = "\n".join(
             f'{ba["id"]}: {ba["username"]}:xxx'
-            for ba in consumer_key_auths(url, apikey, id_username)
+            for ba in consumer_key_auths(session, id_username)
         )
     if plugins:
         user["plugins"] = "\n\n".join(
             f"{json.dumps(plugin, indent=2)}"
-            for plugin in consumer_plugins(url, apikey, id_username)
+            for plugin in consumer_plugins(session, id_username)
         )
     print(tabulate([user], headers="keys", tablefmt=tablefmt))
 
@@ -180,11 +176,10 @@ def add_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) ->
     if not groups:
         return
 
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
 
     for group in groups:
-        consumer_add_group(url, apikey, id_username, group)
+        consumer_add_group(session, id_username, group)
 
     ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
 
@@ -201,11 +196,10 @@ def delete_groups(
     if not groups:
         return
 
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
 
     for group in groups:
-        consumer_delete_group(url, apikey, id_username, group)
+        consumer_delete_group(session, id_username, group)
 
     ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
 
@@ -218,10 +212,9 @@ def delete_consumer(ctx: click.Context, id_username: str) -> None:
 
     Provide the unique identifier xor the name of the consumer to delete.
     """
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
 
-    delete("consumers", url, apikey, id_username)
+    delete("consumers", session, id_username)
     print(f"Deleted `{id_username}`!")
 
 

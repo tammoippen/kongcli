@@ -13,6 +13,7 @@ from ._kong import information
 from ._plugins import list_global_plugins
 from ._routes import list_routes
 from ._services import list_services
+from ._session import LiveServerSession
 
 
 @click.group()
@@ -35,10 +36,6 @@ def cli(
 ) -> None:
     """Interact with your kong admin api."""
     ctx.ensure_object(dict)
-    ctx.obj["url"] = url
-    ctx.obj["apikey"] = apikey
-    ctx.obj["tablefmt"] = tablefmt
-    ctx.obj["font"] = font
     logger.remove()
     if verbose == 1:
         logger.add(sys.stdout, level="WARNING")
@@ -46,6 +43,13 @@ def cli(
         logger.add(sys.stdout, level="INFO")
     if verbose == 3:
         logger.add(sys.stdout, level="DEBUG")
+
+    session = LiveServerSession(url)
+    session.headers.update({"apikey": apikey})
+
+    ctx.obj["session"] = session
+    ctx.obj["tablefmt"] = tablefmt
+    ctx.obj["font"] = font
 
 
 cli.add_command(consumers)
@@ -55,7 +59,7 @@ cli.add_command(consumers)
 @click.pass_context
 def info(ctx: click.Context) -> None:
     """Show information on the kong instance."""
-    print(json.dumps(information(ctx.obj["url"], ctx.obj["apikey"]), indent=2))
+    print(json.dumps(information(ctx.obj["session"]), indent=2))
 
 
 @cli.group(name="list", chain=True)

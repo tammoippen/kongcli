@@ -10,15 +10,14 @@ from ._kong import all_of
 @click.command()
 @click.pass_context
 def list_services(ctx: click.Context) -> None:
-    apikey = ctx.obj["apikey"]
-    url = ctx.obj["url"]
+    session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
     font = ctx.obj["font"]
 
     print_figlet("Service", font=font, width=160)
 
-    services_data = all_of("services", url, apikey)
-    plugins_data = all_of("plugins", url, apikey)
+    services_data = all_of("services", session)
+    plugins_data = all_of("plugins", session)
 
     data = []
     for s in services_data:
