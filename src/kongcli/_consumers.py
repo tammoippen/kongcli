@@ -1,10 +1,12 @@
-# from typing import Dict, List
+from datetime import datetime, timezone
+import sys
+from typing import Optional
 
 import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._kong import all_of
+from ._kong import add, all_of, delete, retrieve
 
 
 @click.command()
@@ -15,6 +17,7 @@ from ._kong import all_of
 )
 @click.pass_context
 def list_consumers(ctx: click.Context, full_keys: bool) -> None:
+    """List all consumers along with relevant information."""
     apikey = ctx.obj["apikey"]
     url = ctx.obj["url"]
     tablefmt = ctx.obj["tablefmt"]
@@ -31,8 +34,9 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
     data = []
     for c in consumers:
         cdata = {
-            "custom_id": c["custom_id"],
-            "username": c["username"],
+            "id": c['id'],
+            "custom_id": c.get("custom_id", ""),
+            "username": c.get("username", ""),
             "acl_groups": set(),
             "plugins": set(),
             "basic_auth": set(),
@@ -62,3 +66,88 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
 
     data.sort(key=lambda d: (len(d["custom_id"]), d["username"]))
     print(tabulate(data, headers="keys", tablefmt=tablefmt))
+
+
+@click.command()
+@click.option("--username", "-u", help="The unique username of the consumer.")
+@click.option(
+    "--custom_id",
+    "-c",
+    help="Field for storing an existing unique ID for the consumer - useful for mapping Kong with users in your existing database.",
+)
+@click.pass_context
+def create_consumer(
+    ctx: click.Context, username: Optional[str], custom_id: Optional[str]
+) -> None:
+    """Create a user / consumer of your services / routes.
+
+    You must select either `custom_id` or `username` or both.
+    """
+    if not (username or custom_id):
+        print(
+            "You must set either `--username` or `--custom_id` with the request.",
+            file=sys.stderr,
+        )
+        raise click.Abort()
+
+    apikey = ctx.obj["apikey"]
+    url = ctx.obj["url"]
+    tablefmt = ctx.obj["tablefmt"]
+    font = ctx.obj["font"]
+
+    user = add("consumers", url, apikey, username=username, custom_id=custom_id)
+    if "created_at" in user:
+        user["created_at"] = datetime.fromtimestamp(
+            user["created_at"] / 1000, timezone.utc
+        )
+    print(tabulate([user], headers="keys", tablefmt=tablefmt))
+
+
+@click.command()
+@click.argument("id_username")
+@click.pass_context
+def retrieve_consumer(ctx: click.Context, id_username: str) -> None:
+    """Retrieve a specific consumer."""
+
+    apikey = ctx.obj["apikey"]
+    url = ctx.obj["url"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    user = retrieve("consumers", url, apikey, id_username)
+    if "created_at" in user:
+        user["created_at"] = datetime.fromtimestamp(
+            user["created_at"] / 1000, timezone.utc
+        )
+    print(tabulate([user], headers="keys", tablefmt=tablefmt))
+
+
+@click.command()
+@click.argument("id_username")
+@click.pass_context
+def delete_consumer(ctx: click.Context, id_username: str) -> None:
+    """Delete a consumer with all associated plugins / acls etc.
+
+    Provide the unique identifier xor the name of the consumer to delete.
+    """
+    apikey = ctx.obj["apikey"]
+    url = ctx.obj["url"]
+
+    delete("consumers", url, apikey, id_username)
+    print(f"Deleted `{id_username}`!")
+
+
+@click.group()
+def consumers() -> None:
+    """Manage consumers of kong.
+
+    The Consumer object represents a consumer - or a user - of a Service. You can either
+    rely on Kong as the primary datastore, or you can map the consumer list with your
+    database to keep consistency between Kong and your existing primary datastore.
+    """
+    pass
+
+
+consumers.add_command(list_consumers, name="list")
+consumers.add_command(create_consumer, name="create")
+consumers.add_command(retrieve_consumer, name="retrieve")
+consumers.add_command(delete_consumer, name="delete")
