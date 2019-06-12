@@ -6,6 +6,8 @@ __pycache__/
 .pytest_cache/
 .benchmarks/
 poetry.lock
+cov_html/
+cov.xml
 
 # Python Packaging
 *.egg-info
