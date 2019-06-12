@@ -23,7 +23,7 @@ services:
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
       KONG_PG_USER: ${KONG_PG_USER:-kong}
       KONG_PG_DATABASE: ${KONG_PG_DATABASE:-kong}
-    command: kong migrations up
+    command: kong migrations ${KONG_MIGRATION_CMD:-up}  # on 1.* it is bootstrap
     restart: on-failure
     depends_on:
       database:
