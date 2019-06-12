@@ -1,0 +1,53 @@
+version: '2.1'
+
+services:
+  database:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=${KONG_PG_USER:-kong}
+      - POSTGRES_DB=${KONG_PG_DATABASE:-kong}
+      - POSTGRES_PASSWORD=${KONG_PG_PASSWORD:-kong}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${KONG_PG_USER:-kong}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+
+  migration:
+    image: kong:${KONG_VERSION_TAG:-0.13.1}
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: database
+      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
+      KONG_PG_USER: ${KONG_PG_USER:-kong}
+      KONG_PG_DATABASE: ${KONG_PG_DATABASE:-kong}
+    command: kong migrations up
+    restart: on-failure
+    depends_on:
+      database:
+        condition: service_healthy
+
+  kong:
+    image: kong:${KONG_VERSION_TAG:-0.13.1}
+    container_name: kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: database
+      KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
+      KONG_PG_USER: ${KONG_PG_USER:-kong}
+      KONG_PG_DATABASE: ${KONG_PG_DATABASE:-kong}
+      KONG_CASSANDRA_CONTACT_POINTS: database
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
+    restart: on-failure
+    ports:
+      - "8000:8000/tcp"
+      - "8001:8001/tcp"
+    depends_on:
+      database:
+        condition: service_healthy
