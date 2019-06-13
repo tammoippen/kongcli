@@ -20,8 +20,8 @@ commands:
           name: Set ENV.
           command: |
             echo 'export PATH=$HOME/.local/bin:$PATH' >> $BASH_ENV
-            echo 'export PATH=/tmp/venv/bin:$PATH' >> $BASH_ENV
-            echo 'export VIRTUAL_ENV=/tmp/venv' >> $BASH_ENV
+            echo 'export PATH=$HOME/venv/bin:$PATH' >> $BASH_ENV
+            echo 'export VIRTUAL_ENV=$HOME/venv' >> $BASH_ENV
             source $BASH_ENV
       - restore_cache:
           key: v1-kongcli-{{ .Environment.CIRCLE_STAGE }}-{{ checksum "pyproject.toml" }}-{{ checksum "setup.cfg" }}
@@ -30,12 +30,12 @@ commands:
           command: |
             set -x
             pip install --user poetry virtualenv
-            virtualenv /tmp/venv
+            virtualenv $VIRTUAL_ENV
             poetry install
       - save_cache:
           key: v1-kongcli-{{ .Environment.CIRCLE_STAGE }}-{{ checksum "pyproject.toml" }}-{{ checksum "setup.cfg" }}
           paths:
-            - /tmp/venv
+            - $VIRTUAL_ENV
             - ~/app/poetry.lock
       - run:
           name: Style typing and tests.
