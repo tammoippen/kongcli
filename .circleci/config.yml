@@ -3,10 +3,13 @@ version: 2.1
 commands:
   tester:
     steps:
+      # local:
+      #    comment: - checkout
+      #    run: circleci config process .circleci/config.yml  > .circleci/config2.yml && circleci local execute -c .circleci/config2.yml  --job test_1_1 -v $PWD:/home/circleci/app
       - checkout
       - run:
           name: Build image.
-          command: sudo docker build -t kongcli .
+          command: sudo docker build -t tammoippen/kongcli:latest .
       - run:
           name: Start kong and verify it is working.
           command: |
@@ -17,40 +20,24 @@ commands:
             sudo docker run --network container:kong --rm -it \
               byrnedo/alpine-curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
       - run:
-          name: Set ENV.
+          name: Testing.
           command: |
-            echo 'export PATH=$HOME/.local/bin:$PATH' >> $BASH_ENV
-            echo 'export PATH=$HOME/venv/bin:$PATH' >> $BASH_ENV
-            echo 'export VIRTUAL_ENV=$HOME/venv' >> $BASH_ENV
-            source $BASH_ENV
-      - restore_cache:
-          key: v1-kongcli-{{ .Environment.CIRCLE_STAGE }}-{{ checksum "pyproject.toml" }}-{{ checksum "setup.cfg" }}
-      - run:
-          name: Install
-          command: |
-            set -x
-            pip install --user poetry virtualenv
-            virtualenv $VIRTUAL_ENV
-            poetry install
-      - save_cache:
-          key: v1-kongcli-{{ .Environment.CIRCLE_STAGE }}-{{ checksum "pyproject.toml" }}-{{ checksum "setup.cfg" }}
-          paths:
-            - $VIRTUAL_ENV
-            - ~/app/poetry.lock
-      - run:
-          name: Style typing and tests.
-          command: |
-            set -x
-            poetry run flake8
-            poetry run mypy src
-            poetry run pytest
+            sudo docker run --rm -it \
+                            --network container:kong \
+                            -v $PWD:/app \
+                            --entrypoint /bin/sh \
+                            tammoippen/kongcli:latest /app/tests/test.sh
       - run:
           name: Stop kong.
           when: always
-          command: sudo docker-compose down --volumes
+          command: sudo docker-compose --project-name tests down --volumes
       - run:
           name: Build sdist.
-          command: poetry build -vvv -f sdist
+          command: |
+            sudo docker run --rm -it \
+                            -v $PWD:/app \
+                            --entrypoint /bin/sh \
+                            tammoippen/kongcli:latest poetry build -vvv -f sdist
       - store_artifacts:
           path: ~/app/dist
           destination: dist
@@ -59,12 +46,17 @@ commands:
           destination: cov_html
       - run:
           name: Coverage
-          command: poetry run coveralls
+          command: |
+            sudo docker run --rm -it \
+                            -v $PWD:/app \
+                            --entrypoint /bin/sh \
+                            tammoippen/kongcli:latest poetry run coveralls
 
 executors:
   default:
     working_directory: ~/app
-    machine: true
+    machine:
+      docker_layer_caching: true
 
 jobs:
   test_13:
