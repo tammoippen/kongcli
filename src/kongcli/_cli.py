@@ -78,7 +78,7 @@ cli.add_command(consumers)
 @click.pass_context
 def info(ctx: click.Context) -> None:
     """Show information on the kong instance."""
-    info = ctx.obj.get('information', information(ctx.obj["session"]))
+    info = ctx.obj.get("information", information(ctx.obj["session"]))
     print(json.dumps(info, indent=2))
 
 

@@ -10,7 +10,7 @@ from tabulate import tabulate
 from ._kong import (
     add,
     all_of,
-    consumer_acls,
+    consumer_groups,
     consumer_add_group,
     consumer_basic_auths,
     consumer_delete_group,
@@ -147,7 +147,7 @@ def retrieve_consumer(
         )
 
     if acls:
-        user["acls"] = "\n".join(consumer_acls(session, id_username))
+        user["acls"] = "\n".join(consumer_groups(session, id_username))
     if basic_auths:
         user["basic_auth"] = "\n".join(
             f'{ba["id"]}: {ba["username"]}:xxx'

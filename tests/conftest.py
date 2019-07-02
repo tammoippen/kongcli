@@ -23,8 +23,8 @@ def clean_kong():
     ) as conn, conn.cursor() as cursor:
         cursor.execute(
             """SELECT table_name
-                          FROM information_schema.tables
-                          WHERE table_schema = 'public' AND table_name <> 'schema_migrations';"""
+               FROM information_schema.tables
+               WHERE table_schema = 'public' AND table_name <> 'schema_migrations';"""
         )
         tables = [row[0] for row in cursor.fetchall()]
         cursor.execute(f"TRUNCATE TABLE {', '.join(tables)} CASCADE;")

@@ -6,7 +6,15 @@ import uuid
 
 import pytest
 
-from kongcli._kong import add, all_of, delete, information, retrieve
+from kongcli._kong import (
+    add,
+    all_of,
+    consumer_groups,
+    consumer_add_group,
+    delete,
+    information,
+    retrieve,
+)
 
 
 def test_information(session, clean_kong):
@@ -42,26 +50,28 @@ def test_add_all_of_consumer(session, clean_kong):
     assert uuid.UUID(consumer3["id"])
     assert consumer3["created_at"] <= ceil(time()) * 1000
 
-    consumers = all_of('consumers', session)
+    consumers = all_of("consumers", session)
     assert 3 == len(consumers)
-    assert sorted([consumer1, consumer2, consumer3], key=itemgetter('id')) == sorted(consumers, key=itemgetter('id'))
+    assert sorted([consumer1, consumer2, consumer3], key=itemgetter("id")) == sorted(
+        consumers, key=itemgetter("id")
+    )
 
 
 def test_add_all_of_consumer_paginate(session, clean_kong):
     for i in range(201):
         add("consumers", session, custom_id=str(i))
 
-    consumers = all_of('consumers', session)
+    consumers = all_of("consumers", session)
     assert 201 == len(consumers)
 
 
 def test_retrieve_consumer(session, clean_kong):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
-    rconsumer = retrieve('consumers', session, consumer['id'])
+    rconsumer = retrieve("consumers", session, consumer["id"])
     assert consumer == rconsumer
 
 
 def test_delete_consumer(session, clean_kong):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
-    delete('consumers', session, consumer['id'])
-    assert [] == all_of('consumers', session)
+    delete("consumers", session, consumer["id"])
+    assert [] == all_of("consumers", session)
