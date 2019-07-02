@@ -87,3 +87,14 @@ def delete(resource: str, session: requests.Session, id_: str) -> None:
     logger.debug(f"Delete `{resource}` with id = `{id_}` ... ")
     resp = session.delete(f"/{resource}/{id_}")
     _check_resp(resp)
+
+
+def update(
+    resource: str, session: requests.Session, id_: str, **kwargs: Any
+) -> Dict[str, Any]:
+    assert resource in ("consumers", "services", "routes", "plugins")
+    logger.debug(f"Update `{resource}` with id = `{id_}` ... ")
+    resp = session.patch(f"/{resource}/{id_}", json=kwargs)
+    _check_resp(resp)
+    data: Dict[str, Any] = resp.json()
+    return data

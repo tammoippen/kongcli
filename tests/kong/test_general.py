@@ -6,7 +6,7 @@ import uuid
 
 import pytest
 
-from kongcli.kong.general import add, all_of, delete, information, retrieve
+from kongcli.kong.general import add, all_of, delete, information, retrieve, update
 
 
 def test_information(session, clean_kong):
@@ -67,3 +67,42 @@ def test_delete_consumer(session, clean_kong):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     delete("consumers", session, consumer["id"])
     assert [] == all_of("consumers", session)
+
+
+@pytest.mark.parametrize(
+    "resource, params",
+    (
+        ("consumers", {"username": "foobar"}),
+        (
+            "services",
+            {"host": "localhost", "path": "/", "protocol": "http", "name": "foobar"},
+        ),
+        # ("routes", {'hosts': ['localhost'], 'service': {'id': str(uuid.uuid4())}}),  # need to create service first
+        ("plugins", {"name": "key-auth"}),
+    ),
+)
+def test_update_no_data(resource, params, session, clean_kong):
+    r1 = add(resource, session, **params)
+
+    if resource in ("services", "plugins"):
+        r2 = update(resource, session, r1["id"])
+        assert r1 == r2
+    else:
+        with pytest.raises(Exception) as e:
+            update(resource, session, r1["id"])
+
+
+def test_update_consumer_username(session, clean_kong):
+    consumer = add("consumers", session, username="test-user", custom_id="1234")
+    uconsumer = update("consumers", session, consumer["id"], username="foobar")
+    assert uconsumer.pop("username") == "foobar"
+    consumer.pop("username")
+    assert uconsumer == consumer
+
+
+def test_update_consumer_custom_id(session, clean_kong):
+    consumer = add("consumers", session, username="test-user", custom_id="1234")
+    uconsumer = update("consumers", session, consumer["id"], custom_id="foobar")
+    assert uconsumer.pop("custom_id") == "foobar"
+    consumer.pop("custom_id")
+    assert uconsumer == consumer
