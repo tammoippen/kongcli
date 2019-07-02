@@ -36,11 +36,11 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
 
     print_figlet("Consumers", font=font, width=160)
 
-    consumers = all_of("consumers", session)
-    plugins = all_of("plugins", session)
-    acls = all_of("acls", session)
-    basic_auths = all_of("basic-auths", session)
-    key_auths = all_of("key-auths", session)
+    consumers = ctx.obj.get("consumers", all_of("consumers", session))
+    plugins = ctx.obj.get("plugins", all_of("plugins", session))
+    acls = ctx.obj.get("acls", all_of("acls", session))
+    basic_auths = ctx.obj.get("basic-auth", all_of("basic-auths", session))
+    key_auths = ctx.obj.get("key-auth", all_of("key-auths", session))
 
     data = []
     for c in consumers:

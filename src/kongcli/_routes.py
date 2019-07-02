@@ -16,9 +16,9 @@ def list_routes(ctx: click.Context) -> None:
 
     print_figlet("Routes", font=font, width=160)
 
-    services = all_of("services", session)
-    routes = all_of("routes", session)
-    plugins = all_of("plugins", session)
+    services = ctx.obj.get("services", all_of("services", session))
+    routes = ctx.obj.get("routes", all_of("routes", session))
+    plugins = ctx.obj.get("plugins", all_of("plugins", session))
 
     data = []
     for r in routes:

@@ -17,7 +17,7 @@ def list_global_plugins(ctx: click.Context) -> None:
 
     print_figlet("Global Plugins", font=font, width=160)
 
-    plugins = all_of("plugins", session)
+    plugins = ctx.obj.get("plugins", all_of("plugins", session))
 
     data = []
     for p in plugins:

@@ -1,4 +1,3 @@
-from functools import lru_cache
 import json
 from typing import Any, Dict, List
 
@@ -7,7 +6,6 @@ import requests
 from urllib3.util import parse_url
 
 
-@lru_cache()
 def information(session: requests.Session) -> Dict[str, Any]:
     logger.debug("Collecting information about kong ...")
     resp = session.get("/")
@@ -19,7 +17,6 @@ def information(session: requests.Session) -> Dict[str, Any]:
     return data
 
 
-@lru_cache()
 def all_of(resource: str, session: requests.Session) -> List[Dict[str, Any]]:
     assert resource in (
         "consumers",
