@@ -108,6 +108,16 @@ def _consumer_get(
     return data
 
 
+def _consumer_delete(
+    session: requests.Session, consumer_id: str, resource: str, resource_id: str
+) -> None:
+    logger.debug(
+        f"Delete {resource} `{resource_id}` from consumer with id = `{consumer_id}` ... "
+    )
+    resp = session.delete(f"/consumers/{consumer_id}/{resource}/{resource_id}")
+    _check_resp(resp)
+
+
 # ACLS / groups
 def consumer_groups(session: requests.Session, id_: str) -> List[str]:
     data = _consumer_get(session, id_, "acls")
@@ -125,9 +135,7 @@ def consumer_add_group(
 
 
 def consumer_delete_group(session: requests.Session, id_: str, group: str) -> None:
-    logger.debug(f"Delete group `{group}` from consumer with id = `{id_}` ... ")
-    resp = session.delete(f"/consumers/{id_}/acls/{group}")
-    _check_resp(resp)
+    _consumer_delete(session, id_, "acls", group)
 
 
 # basic auth
@@ -152,8 +160,8 @@ def consumer_update_basic_auth(
     session: requests.Session,
     consumer_id: str,
     basic_auth_id: str,
-    username: Optional[str],
-    password: Optional[str],
+    username: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> Dict[str, Any]:
     logger.debug(
         f"Update basic auth `{consumer_id}` from consumer with id = `{consumer_id}` ... "
@@ -175,16 +183,46 @@ def consumer_update_basic_auth(
 def consumer_delete_basic_auth(
     session: requests.Session, consumer_id: str, basic_auth_id: str
 ) -> None:
-    logger.debug(
-        f"Delete basic auth `{basic_auth_id}` from consumer with id = `{consumer_id}` ... "
-    )
-    resp = session.delete(f"/consumers/{consumer_id}/basic-auth/{basic_auth_id}")
-    _check_resp(resp)
+    _consumer_delete(session, consumer_id, "basic-auth", basic_auth_id)
 
 
 # key auth
 def consumer_key_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
     return _consumer_get(session, id_, "key-auth")
+
+
+def consumer_add_key_auth(
+    session: requests.Session, id_: str, key: Optional[str] = None
+) -> Dict[str, Any]:
+    logger.debug(f"Add key auth to consumer with id = `{id_}` ... ")
+    payload = None
+    if key:
+        payload = {"key": key}
+    resp = session.post(f"/consumers/{id_}/key-auth", json=payload)
+    _check_resp(resp)
+    data: Dict[str, Any] = resp.json()
+    return data
+
+
+def consumer_update_key_auth(
+    session: requests.Session, consumer_id: str, key_auth_id: str, key: str
+) -> Dict[str, Any]:
+    logger.debug(
+        f"Update key auth `{consumer_id}` from consumer with id = `{consumer_id}` ... "
+    )
+    payload = {"key": key}
+    resp = session.patch(
+        f"/consumers/{consumer_id}/key-auth/{key_auth_id}", json=payload
+    )
+    _check_resp(resp)
+    data: Dict[str, Any] = resp.json()
+    return data
+
+
+def consumer_delete_key_auth(
+    session: requests.Session, consumer_id: str, key_auth_id: str
+) -> None:
+    _consumer_delete(session, consumer_id, "key-auth", key_auth_id)
 
 
 # plugins
