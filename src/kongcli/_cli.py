@@ -9,7 +9,7 @@ from tabulate import tabulate_formats
 
 click.option = partial(click.option, show_default=True)  # type: ignore # noqa: E402
 
-from ._consumers import consumers, list_consumers
+from ._consumers import consumers_cli, list_consumers
 from ._plugins import list_global_plugins
 from ._routes import list_routes
 from ._services import list_services
@@ -71,7 +71,7 @@ def cli(
     ctx.obj["font"] = font
 
 
-cli.add_command(consumers)
+cli.add_command(consumers_cli)
 
 
 @cli.command()

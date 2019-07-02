@@ -7,15 +7,9 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from .kong.consumers import (
-    consumer_groups,
-    consumer_add_group,
-    consumer_basic_auths,
-    consumer_delete_group,
-    consumer_key_auths,
-    consumer_plugins,
-)
-from .kong.general import add, all_of, delete, retrieve
+from .kong import consumers, general
+
+# from .kong.general import general.add, general.all_of, delete, retrieve
 
 
 @click.command()
@@ -33,11 +27,11 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
 
     print_figlet("Consumers", font=font, width=160)
 
-    consumers = ctx.obj.get("consumers", all_of("consumers", session))
-    plugins = ctx.obj.get("plugins", all_of("plugins", session))
-    acls = ctx.obj.get("acls", all_of("acls", session))
-    basic_auths = ctx.obj.get("basic-auth", all_of("basic-auths", session))
-    key_auths = ctx.obj.get("key-auth", all_of("key-auths", session))
+    consumers = ctx.obj.get("consumers", general.all_of("consumers", session))
+    plugins = ctx.obj.get("plugins", general.all_of("plugins", session))
+    acls = ctx.obj.get("acls", general.all_of("acls", session))
+    basic_auths = ctx.obj.get("basic-auth", general.all_of("basic-auths", session))
+    key_auths = ctx.obj.get("key-auth", general.all_of("key-auths", session))
 
     data = []
     for c in consumers:
@@ -101,7 +95,7 @@ def create_consumer(
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
 
-    user = add("consumers", session, username=username, custom_id=custom_id)
+    user = general.add("consumers", session, username=username, custom_id=custom_id)
     if "created_at" in user:
         user["created_at"] = datetime.fromtimestamp(
             user["created_at"] / 1000, timezone.utc
@@ -137,28 +131,28 @@ def retrieve_consumer(
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
 
-    user = retrieve("consumers", session, id_username)
+    user = general.retrieve("consumers", session, id_username)
     if "created_at" in user:
         user["created_at"] = datetime.fromtimestamp(
             user["created_at"] / 1000, timezone.utc
         )
 
     if acls:
-        user["acls"] = "\n".join(consumer_groups(session, id_username))
+        user["acls"] = "\n".join(consumers.groups(session, id_username))
     if basic_auths:
         user["basic_auth"] = "\n".join(
             f'{ba["id"]}: {ba["username"]}:xxx'
-            for ba in consumer_basic_auths(session, id_username)
+            for ba in consumers.basic_auths(session, id_username)
         )
     if key_auths:
         user["key_auth"] = "\n".join(
             f'{ba["id"]}: {ba["username"]}:xxx'
-            for ba in consumer_key_auths(session, id_username)
+            for ba in consumers.key_auths(session, id_username)
         )
     if plugins:
         user["plugins"] = "\n\n".join(
             f"{json.dumps(plugin, indent=2)}"
-            for plugin in consumer_plugins(session, id_username)
+            for plugin in consumers.plugins(session, id_username)
         )
     print(tabulate([user], headers="keys", tablefmt=tablefmt))
 
@@ -176,7 +170,7 @@ def add_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) ->
     session = ctx.obj["session"]
 
     for group in groups:
-        consumer_add_group(session, id_username, group)
+        consumers.add_group(session, id_username, group)
 
     ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
 
@@ -196,7 +190,7 @@ def delete_groups(
     session = ctx.obj["session"]
 
     for group in groups:
-        consumer_delete_group(session, id_username, group)
+        consumers.delete_group(session, id_username, group)
 
     ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
 
@@ -211,12 +205,49 @@ def delete_consumer(ctx: click.Context, id_username: str) -> None:
     """
     session = ctx.obj["session"]
 
-    delete("consumers", session, id_username)
+    general.delete("consumers", session, id_username)
     print(f"Deleted `{id_username}`!")
 
 
-@click.group()
-def consumers() -> None:
+@click.command()
+@click.option(
+    "--username",
+    "-u",
+    help="The unique username of the consumer. You must proviod either this field or custom_id.",
+)
+@click.option(
+    "--custom_id",
+    "-c",
+    help="The unique custom_id of the consaumer. You must proviod either this field or username.",
+)
+@click.argument("id_username")
+@click.pass_context
+def update_consumer(
+    ctx: click.Context,
+    id_username: str,
+    username: Optional[str],
+    custom_id: Optional[str],
+) -> None:
+    """Update a consumer.
+
+    Provide the unique identifier xor the name of the consumer to update as argument.
+    """
+    session = ctx.obj["session"]
+
+    payload = {}
+    if username:
+        payload["username"] = username
+    if custom_id:
+        payload["custom_id"] = custom_id
+
+    assert payload, "At least one of `--username` or `--custom_id` has to be set."
+
+    user = general.update("consumers", session, id_username, **payload)
+    ctx.invoke(retrieve_consumer, id_username=user["id"])
+
+
+@click.group(name="consumers")
+def consumers_cli() -> None:
     """Manage consumers of kong.
 
     The Consumer object represents a consumer - or a user - of a Service. You can either
@@ -226,9 +257,10 @@ def consumers() -> None:
     pass
 
 
-consumers.add_command(list_consumers, name="list")
-consumers.add_command(create_consumer, name="create")
-consumers.add_command(retrieve_consumer, name="retrieve")
-consumers.add_command(delete_consumer, name="delete")
-consumers.add_command(add_groups, name="add-groups")
-consumers.add_command(delete_groups, name="delete-groups")
+consumers_cli.add_command(list_consumers, name="list")
+consumers_cli.add_command(create_consumer, name="create")
+consumers_cli.add_command(retrieve_consumer, name="retrieve")
+consumers_cli.add_command(delete_consumer, name="delete")
+consumers_cli.add_command(add_groups, name="add-groups")
+consumers_cli.add_command(delete_groups, name="delete-groups")
+consumers_cli.add_command(update_consumer, name="update")

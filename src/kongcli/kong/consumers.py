@@ -6,9 +6,7 @@ import requests
 from ._util import _check_resp
 
 
-def _consumer_get(
-    session: requests.Session, id_: str, kind: str
-) -> List[Dict[str, Any]]:
+def _get(session: requests.Session, id_: str, kind: str) -> List[Dict[str, Any]]:
     logger.debug(f"Get `{kind}` of consumer with id = `{id_}` ... ")
     # TODO: paginate?
     resp = session.get(f"/consumers/{id_}/{kind}")
@@ -17,7 +15,7 @@ def _consumer_get(
     return data
 
 
-def _consumer_delete(
+def _delete(
     session: requests.Session, consumer_id: str, resource: str, resource_id: str
 ) -> None:
     logger.debug(
@@ -28,14 +26,12 @@ def _consumer_delete(
 
 
 # ACLS / groups
-def consumer_groups(session: requests.Session, id_: str) -> List[str]:
-    data = _consumer_get(session, id_, "acls")
+def groups(session: requests.Session, id_: str) -> List[str]:
+    data = _get(session, id_, "acls")
     return [acl["group"] for acl in data]
 
 
-def consumer_add_group(
-    session: requests.Session, id_: str, group: str
-) -> Dict[str, Any]:
+def add_group(session: requests.Session, id_: str, group: str) -> Dict[str, Any]:
     logger.debug(f"Add group `{group}` to consumer with id = `{id_}` ... ")
     resp = session.post(f"/consumers/{id_}/acls", json={"group": group})
     _check_resp(resp)
@@ -43,16 +39,16 @@ def consumer_add_group(
     return data
 
 
-def consumer_delete_group(session: requests.Session, id_: str, group: str) -> None:
-    _consumer_delete(session, id_, "acls", group)
+def delete_group(session: requests.Session, id_: str, group: str) -> None:
+    _delete(session, id_, "acls", group)
 
 
 # basic auth
-def consumer_basic_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
-    return _consumer_get(session, id_, "basic-auth")
+def basic_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
+    return _get(session, id_, "basic-auth")
 
 
-def consumer_add_basic_auth(
+def add_basic_auth(
     session: requests.Session, id_: str, username: str, password: str
 ) -> Dict[str, Any]:
     logger.debug(f"Add basic auth `{username}:xxx` to consumer with id = `{id_}` ... ")
@@ -65,7 +61,7 @@ def consumer_add_basic_auth(
     return data
 
 
-def consumer_update_basic_auth(
+def update_basic_auth(
     session: requests.Session,
     consumer_id: str,
     basic_auth_id: str,
@@ -89,18 +85,18 @@ def consumer_update_basic_auth(
     return data
 
 
-def consumer_delete_basic_auth(
+def delete_basic_auth(
     session: requests.Session, consumer_id: str, basic_auth_id: str
 ) -> None:
-    _consumer_delete(session, consumer_id, "basic-auth", basic_auth_id)
+    _delete(session, consumer_id, "basic-auth", basic_auth_id)
 
 
 # key auth
-def consumer_key_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
-    return _consumer_get(session, id_, "key-auth")
+def key_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
+    return _get(session, id_, "key-auth")
 
 
-def consumer_add_key_auth(
+def add_key_auth(
     session: requests.Session, id_: str, key: Optional[str] = None
 ) -> Dict[str, Any]:
     logger.debug(f"Add key auth to consumer with id = `{id_}` ... ")
@@ -113,7 +109,7 @@ def consumer_add_key_auth(
     return data
 
 
-def consumer_update_key_auth(
+def update_key_auth(
     session: requests.Session, consumer_id: str, key_auth_id: str, key: str
 ) -> Dict[str, Any]:
     logger.debug(
@@ -128,12 +124,12 @@ def consumer_update_key_auth(
     return data
 
 
-def consumer_delete_key_auth(
+def delete_key_auth(
     session: requests.Session, consumer_id: str, key_auth_id: str
 ) -> None:
-    _consumer_delete(session, consumer_id, "key-auth", key_auth_id)
+    _delete(session, consumer_id, "key-auth", key_auth_id)
 
 
 # plugins
-def consumer_plugins(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
-    return _consumer_get(session, id_, "plugins")
+def plugins(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
+    return _get(session, id_, "plugins")

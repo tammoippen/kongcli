@@ -4,7 +4,7 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from .kong.general import all_of
+from .kong import general
 
 
 @click.command()
@@ -16,9 +16,9 @@ def list_routes(ctx: click.Context) -> None:
 
     print_figlet("Routes", font=font, width=160)
 
-    services = ctx.obj.get("services", all_of("services", session))
-    routes = ctx.obj.get("routes", all_of("routes", session))
-    plugins = ctx.obj.get("plugins", all_of("plugins", session))
+    services = ctx.obj.get("services", general.all_of("services", session))
+    routes = ctx.obj.get("routes", general.all_of("routes", session))
+    plugins = ctx.obj.get("plugins", general.all_of("plugins", session))
 
     data = []
     for r in routes:
