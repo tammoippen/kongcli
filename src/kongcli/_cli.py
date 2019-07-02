@@ -10,7 +10,7 @@ from tabulate import tabulate_formats
 click.option = partial(click.option, show_default=True)  # type: ignore # noqa: E402
 
 from ._consumers import consumers_cli, list_consumers
-from ._plugins import list_global_plugins
+from ._plugins import list_global_plugins, plugins_cli
 from ._routes import list_routes
 from ._services import list_services
 from ._session import LiveServerSession
@@ -72,6 +72,7 @@ def cli(
 
 
 cli.add_command(consumers_cli)
+cli.add_command(plugins_cli)
 
 
 @cli.command()

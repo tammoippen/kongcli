@@ -88,7 +88,7 @@ def test_update_no_data(resource, params, session, clean_kong):
         r2 = update(resource, session, r1["id"])
         assert r1 == r2
     else:
-        with pytest.raises(Exception) as e:
+        with pytest.raises(Exception):
             update(resource, session, r1["id"])
 
 
