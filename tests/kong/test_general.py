@@ -6,15 +6,7 @@ import uuid
 
 import pytest
 
-from kongcli._kong import (
-    add,
-    all_of,
-    consumer_groups,
-    consumer_add_group,
-    delete,
-    information,
-    retrieve,
-)
+from kongcli.kong.general import add, all_of, delete, information, retrieve
 
 
 def test_information(session, clean_kong):

@@ -4,7 +4,7 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._kong import all_of
+from .kong.general import all_of
 
 
 @click.command()

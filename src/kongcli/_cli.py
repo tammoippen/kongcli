@@ -10,11 +10,11 @@ from tabulate import tabulate_formats
 click.option = partial(click.option, show_default=True)  # type: ignore # noqa: E402
 
 from ._consumers import consumers, list_consumers
-from ._kong import information
 from ._plugins import list_global_plugins
 from ._routes import list_routes
 from ._services import list_services
 from ._session import LiveServerSession
+from .kong.general import information
 
 
 @click.group()

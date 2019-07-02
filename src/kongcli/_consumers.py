@@ -7,18 +7,15 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._kong import (
-    add,
-    all_of,
+from .kong.consumers import (
     consumer_groups,
     consumer_add_group,
     consumer_basic_auths,
     consumer_delete_group,
     consumer_key_auths,
     consumer_plugins,
-    delete,
-    retrieve,
 )
+from .kong.general import add, all_of, delete, retrieve
 
 
 @click.command()

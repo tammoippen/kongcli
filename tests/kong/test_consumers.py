@@ -2,8 +2,7 @@ from uuid import uuid4
 
 import pytest
 
-from kongcli._kong import (
-    add,
+from kongcli.kong.consumers import (
     consumer_add_basic_auth,
     consumer_add_group,
     consumer_add_key_auth,
@@ -17,6 +16,7 @@ from kongcli._kong import (
     consumer_update_basic_auth,
     consumer_update_key_auth,
 )
+from kongcli.kong.general import add
 
 
 def test_no_acl_for_new_consumer(session, clean_kong):
