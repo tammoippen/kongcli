@@ -30,11 +30,12 @@ kongcli = 'kongcli._cli:cli'
 [tool.poetry.dependencies]
 python = "^3.6"
 
+cachetools = "^3.1"
 click = "^7.0"
+loguru = "^0.2.5"
 pyfiglet = "^0.8.0"
 requests = "^2.22"
 tabulate = "^0.8.3"
-loguru = "^0.2.5"
 
 [tool.poetry.dev-dependencies]
 black = "=19.3b0"

@@ -14,6 +14,7 @@ from ._plugins import list_global_plugins, plugins_cli
 from ._routes import list_routes
 from ._services import list_services
 from ._session import LiveServerSession
+from ._util import get
 from .kong.general import information
 
 
@@ -79,7 +80,7 @@ cli.add_command(plugins_cli)
 @click.pass_context
 def info(ctx: click.Context) -> None:
     """Show information on the kong instance."""
-    info = ctx.obj.get("information", information(ctx.obj["session"]))
+    info = get("information", lambda: information(ctx.obj["session"]))
     print(json.dumps(info, indent=2))
 
 

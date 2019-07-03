@@ -7,9 +7,8 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
+from ._util import get
 from .kong import consumers, general
-
-# from .kong.general import general.add, general.all_of, delete, retrieve
 
 
 @click.command()
@@ -27,11 +26,11 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
 
     print_figlet("Consumers", font=font, width=160)
 
-    consumers = ctx.obj.get("consumers", general.all_of("consumers", session))
-    plugins = ctx.obj.get("plugins", general.all_of("plugins", session))
-    acls = ctx.obj.get("acls", general.all_of("acls", session))
-    basic_auths = ctx.obj.get("basic-auth", general.all_of("basic-auths", session))
-    key_auths = ctx.obj.get("key-auth", general.all_of("key-auths", session))
+    consumers = get("consumers", lambda: general.all_of("consumers", session))
+    plugins = get("plugins", lambda: general.all_of("plugins", session))
+    acls = get("acls", lambda: general.all_of("acls", session))
+    basic_auths = get("basic-auth", lambda: general.all_of("basic-auths", session))
+    key_auths = get("key-auth", lambda: general.all_of("key-auths", session))
 
     data = []
     for c in consumers:

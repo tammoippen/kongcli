@@ -5,6 +5,7 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
+from ._util import get
 from .kong import general, plugins
 
 
@@ -18,7 +19,7 @@ def list_global_plugins(ctx: click.Context) -> None:
 
     print_figlet("Global Plugins", font=font, width=160)
 
-    plugins = ctx.obj.get("plugins", general.all_of("plugins", session))
+    plugins = get("plugins", lambda: general.all_of("plugins", session))
 
     data = []
     for p in plugins:
