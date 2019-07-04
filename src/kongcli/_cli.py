@@ -136,24 +136,24 @@ def raw(
     """
     session: LiveServerSession = ctx.obj["session"]
     headers_dict = {h[0]: h[1] for h in header}
-    print(f'> {method} {session.prefix_url}{url}', file=sys.stderr)
+    print(f"> {method} {session.prefix_url}{url}", file=sys.stderr)
     for k, v in session.headers.items():
-        print('> ', k, ': ', v, sep='', file=sys.stderr)
+        print("> ", k, ": ", v, sep="", file=sys.stderr)
     for k, v in headers_dict.items():
-        print('> ', k, ': ', v, sep='', file=sys.stderr)
-    print('>', file=sys.stderr)
+        print("> ", k, ": ", v, sep="", file=sys.stderr)
+    print(">", file=sys.stderr)
 
     payload = None
     if data:
         payload = dict_from_dot(data)
     if payload:
-        print('> Body:')
-        print('>', json.dumps(payload))
+        print("> Body:")
+        print(">", json.dumps(payload))
 
     resp = session.request(method, url, headers=headers_dict, json=payload)
-    print(f'< http/{resp.raw.version}', resp.status_code, resp.reason, file=sys.stderr)
+    print(f"< http/{resp.raw.version}", resp.status_code, resp.reason, file=sys.stderr)
     for k, v in resp.headers.items():
-        print('< ', k, ': ', v, sep='', file=sys.stderr)
+        print("< ", k, ": ", v, sep="", file=sys.stderr)
     print(file=sys.stderr)
     print(resp.text)
 
