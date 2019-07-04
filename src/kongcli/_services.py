@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from operator import itemgetter
 from typing import Optional
 
@@ -13,6 +14,7 @@ from .kong import general
 @click.command()
 @click.pass_context
 def list_services(ctx: click.Context) -> None:
+    """List all services along with relevant information."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
     font = ctx.obj["font"]
@@ -125,7 +127,9 @@ def add(
         raise click.Abort()
 
     if not url and not host:
-        logger.error("If not using the shorthand-attribute `url`, at least `host` has to be set.")
+        logger.error(
+            "If not using the shorthand-attribute `url`, at least `host` has to be set."
+        )
         raise click.Abort()
 
     if url:
@@ -143,10 +147,64 @@ def add(
     print(tabulate([serv], headers="keys", tablefmt=tablefmt))
 
 
+@click.command()
+@click.option(
+    "--plugins/--no-plugins", default=False, help="Get all plugins for the service."
+)
+@click.option(
+    "--routes/--no-routes", default=False, help="Get all routes for the service."
+)
+@click.argument("id_name")
+@click.pass_context
+def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> None:
+    """Retrieve a specific service."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+    font = ctx.obj["font"]
+
+    service = general.retrieve("services", session, id_name)
+    if "created_at" in service:
+        service["created_at"] = datetime.fromtimestamp(
+            service["created_at"], timezone.utc
+        )
+    if "updated_at" in service:
+        service["updated_at"] = datetime.fromtimestamp(
+            service["updated_at"], timezone.utc
+        )
+
+    print_figlet("Service", font=font, width=160)
+    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+
+    if plugins:
+        plugins = general.get_assoziated("services", session, service["id"], "plugins")
+        print_figlet("* Plugins", font=font, width=160)
+        print(tabulate(plugins, headers="keys", tablefmt=tablefmt))
+    if routes:
+        routes = general.get_assoziated("services", session, service["id"], "routes")
+        print_figlet("* Routes", font=font, width=160)
+        print(tabulate(routes, headers="keys", tablefmt=tablefmt))
+
+
+@click.command()
+@click.argument("id_name")
+@click.pass_context
+def delete(ctx: click.Context, id_name: str) -> None:
+    """Delete a service with all associated plugins / routes etc.
+
+    Provide the unique identifier xor the name of the service to delete.
+    """
+    session = ctx.obj["session"]
+
+    general.delete("services", session, id_name)
+    print(f"Deleted service `{id_name}`!")
+
+
 @click.group(name="services")
 def services_cli() -> None:
     pass
 
 
 services_cli.add_command(add)
+services_cli.add_command(retrieve)
+services_cli.add_command(delete)
 services_cli.add_command(list_services, name="list")

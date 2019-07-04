@@ -205,7 +205,7 @@ def delete_consumer(ctx: click.Context, id_username: str) -> None:
     session = ctx.obj["session"]
 
     general.delete("consumers", session, id_username)
-    print(f"Deleted `{id_username}`!")
+    print(f"Deleted consumer `{id_username}`!")
 
 
 @click.command()
