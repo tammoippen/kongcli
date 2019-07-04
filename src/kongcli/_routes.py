@@ -53,3 +53,27 @@ def list_routes(ctx: click.Context) -> None:
             tablefmt=tablefmt,
         )
     )
+
+
+@click.group(name="routes")
+def routes_cli() -> None:
+    """Manage Routes Objects.
+
+    The Route entities defines rules to match client requests. Each Route is
+    associated with a Service, and a Service may have multiple Routes
+    associated to it. Every request matching a given Route will be proxied
+    to its associated Service.
+
+    The combination of Routes and Services (and the separation of concerns
+    between them) offers a powerful routing mechanism with which it is possible
+    to define fine-grained entry-points in Kong leading to different upstream
+    services of your infrastructure.
+    """
+    pass
+
+
+# routes_cli.add_command(add)
+# routes_cli.add_command(retrieve)
+# routes_cli.add_command(delete)
+# routes_cli.add_command(update)
+routes_cli.add_command(list_routes, name="list")

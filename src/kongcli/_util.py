@@ -43,14 +43,10 @@ def dict_from_dot(data: Tuple[Tuple[str, str], ...]) -> Dict[str, Any]:
 def parse_datetimes(obj: Dict[str, Any]) -> None:
     try:
         if "created_at" in obj:
-            obj["created_at"] = datetime.fromtimestamp(
-                obj["created_at"], timezone.utc
-            )
+            obj["created_at"] = datetime.fromtimestamp(obj["created_at"], timezone.utc)
 
         if "updated_at" in obj:
-            obj["updated_at"] = datetime.fromtimestamp(
-                obj["updated_at"], timezone.utc
-            )
+            obj["updated_at"] = datetime.fromtimestamp(obj["updated_at"], timezone.utc)
     except ValueError:
         if "created_at" in obj:
             obj["created_at"] = datetime.fromtimestamp(

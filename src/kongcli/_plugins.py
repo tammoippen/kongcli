@@ -50,11 +50,32 @@ def schema(ctx: click.Context, plugin_name: str) -> None:
 
 @click.group(name="plugins")
 def plugins_cli() -> None:
-    """Manage plugins of kong.
+    """Manage Plugin Objects.
 
     A Plugin entity represents a plugin configuration that will be executed during the
     HTTP request/response lifecycle. It is how you can add functionalities to Services
-    that run behind Kong, like Authentication or Rate Limiting for example.
+    that run behind Kong, like Authentication or Rate Limiting for example. You can find
+    more information about how to install and what values each plugin takes by visiting
+    the [Kong Hub](https://docs.konghq.com/hub/).
+
+    When adding a Plugin Configuration to a Service, every request made by a client
+    to that Service will run said Plugin. If a Plugin needs to be tuned to
+    different values for some specific Consumers, you can do so by specifying
+    the consumer_id value
+
+    Precedence
+
+    A plugin will always be run once and only once per request. But the configuration
+    with which it will run depends on the entities it has been configured for.
+
+    Plugins can be configured for various entities, combination of entities, or even
+    globally. This is useful, for example, when you wish to configure a plugin a
+    certain way for most requests, but make authenticated requests behave slightly differently.
+
+    Therefore, there exists an order of precedence for running a plugin when it has
+    been applied to different entities with different configurations. The rule of thumb is:
+    the more specific a plugin is with regards to how many entities it has been
+    configured on, the higher its priority.
     """
     pass
 

@@ -241,7 +241,7 @@ def update(
 
 @click.group(name="consumers")
 def consumers_cli() -> None:
-    """Manage consumers of kong.
+    """Manage Consumers Objects.
 
     The Consumer object represents a consumer - or a user - of a Service. You can either
     rely on Kong as the primary datastore, or you can map the consumer list with your

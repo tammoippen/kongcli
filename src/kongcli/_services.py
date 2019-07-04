@@ -169,13 +169,17 @@ def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> N
     print(tabulate([service], headers="keys", tablefmt=tablefmt))
 
     if plugins:
-        plugins_entities = general.get_assoziated("services", session, service["id"], "plugins")
+        plugins_entities = general.get_assoziated(
+            "services", session, service["id"], "plugins"
+        )
         for p in plugins_entities:
             parse_datetimes(p)
         print_figlet("* Plugins", font=font, width=160)
         print(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
     if routes:
-        routes_entities = general.get_assoziated("services", session, service["id"], "routes")
+        routes_entities = general.get_assoziated(
+            "services", session, service["id"], "routes"
+        )
         for r in routes_entities:
             parse_datetimes(r)
         print_figlet("* Routes", font=font, width=160)
@@ -296,6 +300,22 @@ def update(
 
 @click.group(name="services")
 def services_cli() -> None:
+    """Manage Service Objects.
+
+    Service entities, as the name implies, are abstractions of each of
+    your own upstream services. Examples of Services would be a data
+    transformation microservice, a billing API, etc.
+
+    The main attribute of a Service is its URL (where Kong should proxy
+    traffic to), which can be set as a single string or by specifying
+    its protocol, host, port and path individually.
+
+    Services are associated to Routes (a Service can have many Routes
+    associated with it). Routes are entry-points in Kong and define
+    rules to match client requests. Once a Route is matched, Kong
+    proxies the request to its associated Service. See the Proxy
+    Reference for a detailed explanation of how Kong proxies traffic.
+    """
     pass
 
 
