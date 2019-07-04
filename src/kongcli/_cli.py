@@ -12,7 +12,7 @@ click.option = partial(click.option, show_default=True)  # type: ignore # noqa: 
 from ._consumers import consumers_cli, list_consumers
 from ._plugins import list_global_plugins, plugins_cli
 from ._routes import list_routes
-from ._services import list_services
+from ._services import list_services, services_cli
 from ._session import LiveServerSession
 from ._util import dict_from_dot, get
 from .kong.general import information
@@ -52,11 +52,13 @@ def cli(
     """Interact with your kong admin api."""
     ctx.ensure_object(dict)
     logger.remove()
+    if verbose == 0:
+        logger.add(sys.stderr, level="ERROR")
     if verbose == 1:
         logger.add(sys.stderr, level="WARNING")
     if verbose == 2:
         logger.add(sys.stderr, level="INFO")
-    if verbose == 3:
+    if verbose >= 3:
         logger.add(sys.stderr, level="DEBUG")
 
     session = LiveServerSession(url)
@@ -74,6 +76,7 @@ def cli(
 
 cli.add_command(consumers_cli)
 cli.add_command(plugins_cli)
+cli.add_command(services_cli)
 
 
 @cli.command()
