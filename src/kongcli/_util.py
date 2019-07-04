@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import json
 from typing import Any, Callable, Dict, Tuple
 
@@ -17,7 +18,7 @@ def get(key: str, fkt: Callable[[], Any]) -> Any:
 
 
 def dict_from_dot(data: Tuple[Tuple[str, str], ...]) -> Dict[str, Any]:
-    result = {}
+    result: Dict[str, Any] = {}
     for k, v in data:
         key_parts = k.split(".")
         curr = result
@@ -37,3 +38,26 @@ def dict_from_dot(data: Tuple[Tuple[str, str], ...]) -> Dict[str, Any]:
         curr[key_parts[-1]] = value
 
     return result
+
+
+def parse_datetimes(obj: Dict[str, Any]) -> None:
+    try:
+        if "created_at" in obj:
+            obj["created_at"] = datetime.fromtimestamp(
+                obj["created_at"], timezone.utc
+            )
+
+        if "updated_at" in obj:
+            obj["updated_at"] = datetime.fromtimestamp(
+                obj["updated_at"], timezone.utc
+            )
+    except ValueError:
+        if "created_at" in obj:
+            obj["created_at"] = datetime.fromtimestamp(
+                obj["created_at"] / 1000, timezone.utc
+            )
+
+        if "updated_at" in obj:
+            obj["updated_at"] = datetime.fromtimestamp(
+                obj["updated_at"] / 1000, timezone.utc
+            )

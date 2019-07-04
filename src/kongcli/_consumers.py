@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 import json
 import sys
 from typing import Optional, Tuple
@@ -7,7 +6,7 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get
+from ._util import get, parse_datetimes
 from .kong import consumers, general
 
 
@@ -77,7 +76,7 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
     help="Field for storing an existing unique ID for the consumer - useful for mapping Kong with users in your existing database.",
 )
 @click.pass_context
-def create_consumer(
+def create(
     ctx: click.Context, username: Optional[str], custom_id: Optional[str]
 ) -> None:
     """Create a user / consumer of your services / routes.
@@ -95,10 +94,7 @@ def create_consumer(
     tablefmt = ctx.obj["tablefmt"]
 
     user = general.add("consumers", session, username=username, custom_id=custom_id)
-    if "created_at" in user:
-        user["created_at"] = datetime.fromtimestamp(
-            user["created_at"] / 1000, timezone.utc
-        )
+    parse_datetimes(user)
     print(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
@@ -117,7 +113,7 @@ def create_consumer(
     "--plugins/--no-plugins", default=False, help="Get all plugins for the user."
 )
 @click.pass_context
-def retrieve_consumer(
+def retrieve(
     ctx: click.Context,
     id_username: str,
     acls: bool,
@@ -131,10 +127,7 @@ def retrieve_consumer(
     tablefmt = ctx.obj["tablefmt"]
 
     user = general.retrieve("consumers", session, id_username)
-    if "created_at" in user:
-        user["created_at"] = datetime.fromtimestamp(
-            user["created_at"] / 1000, timezone.utc
-        )
+    parse_datetimes(user)
 
     if acls:
         user["acls"] = "\n".join(consumers.groups(session, id_username))
@@ -171,7 +164,7 @@ def add_groups(ctx: click.Context, id_username: str, groups: Tuple[str, ...]) ->
     for group in groups:
         consumers.add_group(session, id_username, group)
 
-    ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
+    ctx.invoke(retrieve, id_username=id_username, acls=True)
 
 
 @click.command()
@@ -191,13 +184,13 @@ def delete_groups(
     for group in groups:
         consumers.delete_group(session, id_username, group)
 
-    ctx.invoke(retrieve_consumer, id_username=id_username, acls=True)
+    ctx.invoke(retrieve, id_username=id_username, acls=True)
 
 
 @click.command()
 @click.argument("id_username")
 @click.pass_context
-def delete_consumer(ctx: click.Context, id_username: str) -> None:
+def delete(ctx: click.Context, id_username: str) -> None:
     """Delete a consumer with all associated plugins / acls etc.
 
     Provide the unique identifier xor the name of the consumer to delete.
@@ -221,7 +214,7 @@ def delete_consumer(ctx: click.Context, id_username: str) -> None:
 )
 @click.argument("id_username")
 @click.pass_context
-def update_consumer(
+def update(
     ctx: click.Context,
     id_username: str,
     username: Optional[str],
@@ -232,6 +225,7 @@ def update_consumer(
     Provide the unique identifier xor the name of the consumer to update as argument.
     """
     session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
 
     payload = {}
     if username:
@@ -242,7 +236,7 @@ def update_consumer(
     assert payload, "At least one of `--username` or `--custom_id` has to be set."
 
     user = general.update("consumers", session, id_username, **payload)
-    ctx.invoke(retrieve_consumer, id_username=user["id"])
+    print(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
 @click.group(name="consumers")
@@ -257,9 +251,9 @@ def consumers_cli() -> None:
 
 
 consumers_cli.add_command(list_consumers, name="list")
-consumers_cli.add_command(create_consumer, name="create")
-consumers_cli.add_command(retrieve_consumer, name="retrieve")
-consumers_cli.add_command(delete_consumer, name="delete")
+consumers_cli.add_command(create)
+consumers_cli.add_command(retrieve)
+consumers_cli.add_command(delete)
 consumers_cli.add_command(add_groups, name="add-groups")
 consumers_cli.add_command(delete_groups, name="delete-groups")
-consumers_cli.add_command(update_consumer, name="update")
+consumers_cli.add_command(update)

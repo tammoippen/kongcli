@@ -1,13 +1,12 @@
-from datetime import datetime, timezone
 from operator import itemgetter
-from typing import Optional
+from typing import Dict, Optional, Union
 
 import click
 from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get
+from ._util import get, parse_datetimes
 from .kong import general
 
 
@@ -111,7 +110,7 @@ def add(
     """Add a service to kong."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
-    payload = {
+    payload: Dict[str, Union[str, int]] = {
         "retries": retries,
         "connect_timeout": connect_timeout,
         "write_timeout": write_timeout,
@@ -144,6 +143,7 @@ def add(
         payload["path"] = path
 
     service = general.add("services", session, **payload)
+    parse_datetimes(service)
     print(tabulate([service], headers="keys", tablefmt=tablefmt))
 
 
@@ -163,26 +163,23 @@ def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> N
     font = ctx.obj["font"]
 
     service = general.retrieve("services", session, id_name)
-    if "created_at" in service:
-        service["created_at"] = datetime.fromtimestamp(
-            service["created_at"], timezone.utc
-        )
-    if "updated_at" in service:
-        service["updated_at"] = datetime.fromtimestamp(
-            service["updated_at"], timezone.utc
-        )
+    parse_datetimes(service)
 
     print_figlet("Service", font=font, width=160)
     print(tabulate([service], headers="keys", tablefmt=tablefmt))
 
     if plugins:
-        plugins = general.get_assoziated("services", session, service["id"], "plugins")
+        plugins_entities = general.get_assoziated("services", session, service["id"], "plugins")
+        for p in plugins_entities:
+            parse_datetimes(p)
         print_figlet("* Plugins", font=font, width=160)
-        print(tabulate(plugins, headers="keys", tablefmt=tablefmt))
+        print(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
     if routes:
-        routes = general.get_assoziated("services", session, service["id"], "routes")
+        routes_entities = general.get_assoziated("services", session, service["id"], "routes")
+        for r in routes_entities:
+            parse_datetimes(r)
         print_figlet("* Routes", font=font, width=160)
-        print(tabulate(routes, headers="keys", tablefmt=tablefmt))
+        print(tabulate(routes_entities, headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -265,7 +262,7 @@ def update(
         )
         raise click.Abort()
 
-    payload = {}
+    payload: Dict[str, Union[str, int]] = {}
     if name is not None:
         payload["name"] = name
     if protocol is not None:
@@ -293,14 +290,7 @@ def update(
         return
 
     service = general.update("services", session, id_name, **payload)
-    if "created_at" in service:
-        service["created_at"] = datetime.fromtimestamp(
-            service["created_at"], timezone.utc
-        )
-    if "updated_at" in service:
-        service["updated_at"] = datetime.fromtimestamp(
-            service["updated_at"], timezone.utc
-        )
+    parse_datetimes(service)
     print(tabulate([service], headers="keys", tablefmt=tablefmt))
 
 
