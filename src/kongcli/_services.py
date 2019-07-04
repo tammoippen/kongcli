@@ -143,8 +143,8 @@ def add(
     if path:
         payload["path"] = path
 
-    serv = general.add("services", session, **payload)
-    print(tabulate([serv], headers="keys", tablefmt=tablefmt))
+    service = general.add("services", session, **payload)
+    print(tabulate([service], headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -199,6 +199,111 @@ def delete(ctx: click.Context, id_name: str) -> None:
     print(f"Deleted service `{id_name}`!")
 
 
+@click.command()
+@click.option("--name", help="The Service name.")
+@click.option(
+    "--protocol",
+    type=click.Choice(["http", "https"]),
+    help="The protocol used to communicate with the upstream. It can be one of `http` (default) or `https`.",
+)
+@click.option("--host", help="The host of the upstream server.")
+@click.option("--port", type=int, help="The upstream server port. Defaults to 80.")
+@click.option(
+    "--path",
+    help="The path to be used in requests to the upstream server. Defaults to ``.",
+)
+@click.option(
+    "--retries",
+    type=int,
+    help="The number of retries to execute upon failure to proxy.",
+)
+@click.option(
+    "--connect_timeout",
+    type=int,
+    help="The timeout in milliseconds for establishing a connection to the upstream server.",
+)
+@click.option(
+    "--write_timeout",
+    type=int,
+    help="The timeout in milliseconds between two successive write operations for transmitting a request to the upstream server.",
+)
+@click.option(
+    "--read_timeout",
+    type=int,
+    help="The timeout in milliseconds between two successive read operations for transmitting a request to the upstream server.",
+)
+@click.option(
+    "--url",
+    help="Shorthand attribute to set protocol, host, port and path at once. This attribute is write-only (the Admin API never “returns” the url).",
+)
+@click.argument("id_name")
+@click.pass_context
+def update(
+    ctx: click.Context,
+    id_name: str,
+    name: Optional[str],
+    protocol: Optional[str],
+    host: Optional[str],
+    port: Optional[int],
+    path: Optional[str],
+    retries: Optional[int],
+    connect_timeout: Optional[int],
+    write_timeout: Optional[int],
+    read_timeout: Optional[int],
+    url: Optional[str],
+) -> None:
+    """Update a service.
+
+    Provide the unique identifier xor the name of the service to update as argument.
+    """
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    if url and (protocol or host or port or path):
+        logger.error(
+            "If using the shorthand-attribute `url` the other options `protocol`, `host`, `port` and `path` will be ignored."
+        )
+        raise click.Abort()
+
+    payload = {}
+    if name is not None:
+        payload["name"] = name
+    if protocol is not None:
+        payload["protocol"] = protocol
+    if host is not None:
+        payload["host"] = host
+    if port is not None:
+        payload["port"] = port
+    if path is not None:
+        payload["path"] = path
+    if retries is not None:
+        payload["retries"] = retries
+    if connect_timeout is not None:
+        payload["connect_timeout"] = connect_timeout
+    if write_timeout is not None:
+        payload["write_timeout"] = write_timeout
+    if read_timeout is not None:
+        payload["read_timeout"] = read_timeout
+    if url is not None:
+        payload["url"] = url
+
+    if not payload:
+        logger.info("Nothing to update.")
+        ctx.invoke(retrieve, id_name=id_name)
+        return
+
+    service = general.update("services", session, id_name, **payload)
+    if "created_at" in service:
+        service["created_at"] = datetime.fromtimestamp(
+            service["created_at"], timezone.utc
+        )
+    if "updated_at" in service:
+        service["updated_at"] = datetime.fromtimestamp(
+            service["updated_at"], timezone.utc
+        )
+    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+
+
 @click.group(name="services")
 def services_cli() -> None:
     pass
@@ -207,4 +312,5 @@ def services_cli() -> None:
 services_cli.add_command(add)
 services_cli.add_command(retrieve)
 services_cli.add_command(delete)
+services_cli.add_command(update)
 services_cli.add_command(list_services, name="list")
