@@ -4,15 +4,7 @@ from loguru import logger
 import requests
 
 from ._util import _check_resp
-
-
-def _get(session: requests.Session, id_: str, kind: str) -> List[Dict[str, Any]]:
-    logger.debug(f"Get `{kind}` of consumer with id = `{id_}` ... ")
-    # TODO: paginate?
-    resp = session.get(f"/consumers/{id_}/{kind}")
-    _check_resp(resp)
-    data: List[Dict[str, Any]] = resp.json().get("data", [])
-    return data
+from .general import get_assoziated
 
 
 def _delete(
@@ -27,7 +19,7 @@ def _delete(
 
 # ACLS / groups
 def groups(session: requests.Session, id_: str) -> List[str]:
-    data = _get(session, id_, "acls")
+    data = get_assoziated("consumers", session, id_, "acls")
     return [acl["group"] for acl in data]
 
 
@@ -45,7 +37,7 @@ def delete_group(session: requests.Session, id_: str, group: str) -> None:
 
 # basic auth
 def basic_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
-    return _get(session, id_, "basic-auth")
+    return get_assoziated("consumers", session, id_, "basic-auth")
 
 
 def add_basic_auth(
@@ -93,7 +85,7 @@ def delete_basic_auth(
 
 # key auth
 def key_auths(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
-    return _get(session, id_, "key-auth")
+    return get_assoziated("consumers", session, id_, "key-auth")
 
 
 def add_key_auth(
@@ -132,4 +124,4 @@ def delete_key_auth(
 
 # plugins
 def plugins(session: requests.Session, id_: str) -> List[Dict[str, Any]]:
-    return _get(session, id_, "plugins")
+    return get_assoziated("consumers", session, id_, "plugins")

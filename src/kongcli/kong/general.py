@@ -98,3 +98,14 @@ def update(
     _check_resp(resp)
     data: Dict[str, Any] = resp.json()
     return data
+
+
+def get_assoziated(
+    resource: str, session: requests.Session, id_: str, kind: str
+) -> List[Dict[str, Any]]:
+    logger.debug(f"Get `{kind}` of `{resource}` with id = `{id_}` ... ")
+    # TODO: paginate?
+    resp = session.get(f"/{resource}/{id_}/{kind}")
+    _check_resp(resp)
+    data: List[Dict[str, Any]] = resp.json().get("data", [])
+    return data
