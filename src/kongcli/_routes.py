@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
 
 import click
@@ -194,6 +194,94 @@ def delete(ctx: click.Context, uuid_id: str) -> None:
     print(f"Deleted route `{uuid_id}`!")
 
 
+@click.command()
+@click.option(
+    "--protocols",
+    type=click.Choice(["http", "https"]),
+    help='A list of the protocols this Route should allow. By default it is ["http", "https"], which means that the Route accepts both. When set to ["https"], HTTP requests are answered with a request to upgrade to HTTPS. (semi-optional)',
+    multiple=True,
+)
+@click.option(
+    "--methods",
+    help='A list of HTTP methods that match this Route. For example: ["GET", "POST"]. (semi-optional)',
+    multiple=True,
+)
+@click.option(
+    "--hosts",
+    help="A list of domain names that match this Route. For example: example.com. (semi-optional)",
+    multiple=True,
+)
+@click.option(
+    "--paths",
+    help="A list of paths that match this Route. For example: /my-path.",
+    multiple=True,
+)
+@click.option(
+    "--regex_priority",
+    type=int,
+    help="Determines the relative order of this Route against others when evaluating regex paths. Routes with higher numbers will have their regex paths evaluated first.",
+)
+@click.option(
+    "--strip_path",
+    type=bool,
+    help="When matching a Route via one of the paths, strip the matching prefix from the upstream request URL.",
+)
+@click.option(
+    "--preserve_host",
+    type=bool,
+    help="When matching a Route via one of the hosts domain names, use the request Host header in the upstream request headers. If set to `false`, the upstream Host header will be that of the Service’s host.",
+)
+@click.option(
+    "--service",
+    type=click.UUID,
+    help="The Service this Route is associated to. This is where the Route proxies traffic to.",
+)
+@click.argument("uuid_id")
+@click.pass_context
+def update(
+    ctx: click.Context,
+    uuid_id: str,
+    protocols: Tuple[str, ...],
+    methods: Tuple[str, ...],
+    hosts: Tuple[str, ...],
+    paths: Tuple[str, ...],
+    regex_priority: Optional[int],
+    strip_path: Optional[bool],
+    preserve_host: Optional[bool],
+    service: Optional[UUID],
+) -> None:
+    """Update a route."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+    payload: Dict[str, Any] = {}
+
+    if protocols:
+        payload["protocols"] = list(set(protocols))
+    if methods:
+        payload["methods"] = list(set(methods))
+    if hosts:
+        payload["hosts"] = list(set(hosts))
+    if paths:
+        payload["paths"] = list(set(paths))
+    if regex_priority is not None:
+        payload["regex_priority"] = regex_priority
+    if strip_path is not None:
+        payload["strip_path"] = strip_path
+    if preserve_host is not None:
+        payload["preserve_host"] = preserve_host
+    if service is not None:
+        payload["service"] = {"id": str(service)}
+
+    if not payload:
+        logger.info("Nothing to update.")
+        ctx.invoke(retrieve, uuid_id=uuid_id)
+        return
+
+    route = general.update("routes", session, uuid_id, **payload)
+    parse_datetimes(route)
+    print(tabulate([route], headers="keys", tablefmt=tablefmt))
+
+
 @click.group(name="routes")
 def routes_cli() -> None:
     """Manage Routes Objects.
@@ -214,5 +302,5 @@ def routes_cli() -> None:
 routes_cli.add_command(add)
 routes_cli.add_command(retrieve)
 routes_cli.add_command(delete)
-# routes_cli.add_command(update)
+routes_cli.add_command(update)
 routes_cli.add_command(list_routes, name="list")
