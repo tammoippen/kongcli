@@ -14,6 +14,7 @@ from .kong import general
 @click.command()
 @click.pass_context
 def list_routes(ctx: click.Context) -> None:
+    """List all routes along with relevant information."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
     font = ctx.obj["font"]
@@ -147,6 +148,52 @@ def add(
     print(tabulate([route], headers="keys", tablefmt=tablefmt))
 
 
+@click.command()
+@click.option(
+    "--plugins/--no-plugins", default=False, help="Get all plugins for the route."
+)
+@click.argument("uuid_id")
+@click.pass_context
+def retrieve(ctx: click.Context, uuid_id: str, plugins: bool) -> None:
+    """Retrieve a specific route."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+    font = ctx.obj["font"]
+
+    route = general.retrieve("routes", session, uuid_id)
+    parse_datetimes(route)
+    service = general.retrieve("services", session, route['service']['id'])
+    parse_datetimes(service)
+
+    print_figlet("Route", font=font, width=160)
+    print(tabulate([route], headers="keys", tablefmt=tablefmt))
+    print_figlet("* Service", font=font, width=160)
+    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+
+    if plugins:
+        plugins_entities = general.get_assoziated(
+            "routes", session, route["id"], "plugins"
+        )
+        for p in plugins_entities:
+            parse_datetimes(p)
+        print_figlet("* Plugins", font=font, width=160)
+        print(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
+
+
+@click.command()
+@click.argument("uuid_id")
+@click.pass_context
+def delete(ctx: click.Context, uuid_id: str) -> None:
+    """Delete a route with all associated plugins.
+
+    Provide the unique identifier of the route to delete.
+    """
+    session = ctx.obj["session"]
+
+    general.delete("routes", session, uuid_id)
+    print(f"Deleted route `{uuid_id}`!")
+
+
 @click.group(name="routes")
 def routes_cli() -> None:
     """Manage Routes Objects.
@@ -165,7 +212,7 @@ def routes_cli() -> None:
 
 
 routes_cli.add_command(add)
-# routes_cli.add_command(retrieve)
-# routes_cli.add_command(delete)
+routes_cli.add_command(retrieve)
+routes_cli.add_command(delete)
 # routes_cli.add_command(update)
 routes_cli.add_command(list_routes, name="list")
