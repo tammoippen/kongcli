@@ -27,7 +27,7 @@ def list_routes(ctx: click.Context) -> None:
             "route_id": r["id"],
             "service_name": None,
             "protocols": r["protocols"],
-            "host": r["hosts"] if r.get("host") else "api.fedger.co",
+            "hosts": r.get("hosts"),
             "paths": r["paths"],
             "whitelist": set(),
             "plugins": set(),
