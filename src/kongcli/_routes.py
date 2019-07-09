@@ -1,10 +1,13 @@
 from operator import itemgetter
+from typing import Any, Dict, Tuple
+from uuid import UUID
 
 import click
+from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get
+from ._util import get, parse_datetimes
 from .kong import general
 
 
@@ -55,6 +58,95 @@ def list_routes(ctx: click.Context) -> None:
     )
 
 
+@click.command()
+@click.option(
+    "--protocols",
+    type=click.Choice(["http", "https"]),
+    help='A list of the protocols this Route should allow. By default it is ["http", "https"], which means that the Route accepts both. When set to ["https"], HTTP requests are answered with a request to upgrade to HTTPS. (semi-optional)',
+    multiple=True,
+)
+@click.option(
+    "--methods",
+    help='A list of HTTP methods that match this Route. For example: ["GET", "POST"]. (semi-optional)',
+    multiple=True,
+)
+@click.option(
+    "--hosts",
+    help="A list of domain names that match this Route. For example: example.com. (semi-optional)",
+    multiple=True,
+)
+@click.option(
+    "--paths",
+    help="A list of paths that match this Route. For example: /my-path.",
+    multiple=True,
+)
+@click.option(
+    "--regex_priority",
+    type=int,
+    default=0,
+    help="Determines the relative order of this Route against others when evaluating regex paths. Routes with higher numbers will have their regex paths evaluated first.",
+)
+@click.option(
+    "--strip_path",
+    default=True,
+    type=bool,
+    help="When matching a Route via one of the paths, strip the matching prefix from the upstream request URL.",
+)
+@click.option(
+    "--preserve_host",
+    default=False,
+    type=bool,
+    help="When matching a Route via one of the hosts domain names, use the request Host header in the upstream request headers. If set to `false`, the upstream Host header will be that of the Service’s host.",
+)
+@click.option(
+    "--service",
+    type=click.UUID,
+    help="The Service this Route is associated to. This is where the Route proxies traffic to.",
+    required=True,
+)
+@click.pass_context
+def add(
+    ctx: click.Context,
+    protocols: Tuple[str, ...],
+    methods: Tuple[str, ...],
+    hosts: Tuple[str, ...],
+    paths: Tuple[str, ...],
+    regex_priority: int,
+    strip_path: bool,
+    preserve_host: bool,
+    service: UUID,
+) -> None:
+    """Add a route to kong.
+
+    At least one of hosts, paths, or methods must be set.
+    """
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+    payload: Dict[str, Any] = {
+        "regex_priority": regex_priority,
+        "strip_path": strip_path,
+        "preserve_host": preserve_host,
+        "service": {"id": str(service)},
+    }
+
+    if not (methods or hosts or paths):
+        logger.error("At least one of hosts, paths, or methods must be set.")
+        raise click.Abort()
+
+    if protocols:
+        payload["protocols"] = list(set(protocols))
+    if methods:
+        payload["methods"] = list(set(methods))
+    if hosts:
+        payload["hosts"] = list(set(hosts))
+    if paths:
+        payload["paths"] = list(set(paths))
+
+    route = general.add("routes", session, **payload)
+    parse_datetimes(route)
+    print(tabulate([route], headers="keys", tablefmt=tablefmt))
+
+
 @click.group(name="routes")
 def routes_cli() -> None:
     """Manage Routes Objects.
@@ -72,7 +164,7 @@ def routes_cli() -> None:
     pass
 
 
-# routes_cli.add_command(add)
+routes_cli.add_command(add)
 # routes_cli.add_command(retrieve)
 # routes_cli.add_command(delete)
 # routes_cli.add_command(update)
