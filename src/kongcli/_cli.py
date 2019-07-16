@@ -19,7 +19,7 @@ from ._util import get
 from .kong.general import information
 
 
-@click.group()
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.option("--url", envvar="KONG_BASE", help="Base url to kong.", required=True)
 @click.option("--apikey", envvar="KONG_APIKEY", help="API key for key-auth to kong.")
 @click.option("--basic", envvar="KONG_BASIC_USER", help="Basic auth username for kong.")
