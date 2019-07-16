@@ -7,6 +7,7 @@ from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
+from ._plugins import enable_basic_auth_routes, enable_key_auth_routes
 from ._util import get, parse_datetimes
 from .kong import general
 
@@ -162,7 +163,7 @@ def retrieve(ctx: click.Context, uuid_id: str, plugins: bool) -> None:
 
     route = general.retrieve("routes", session, uuid_id)
     parse_datetimes(route)
-    service = general.retrieve("services", session, route['service']['id'])
+    service = general.retrieve("services", session, route["service"]["id"])
     parse_datetimes(service)
 
     print_figlet("Route", font=font, width=160)
@@ -304,3 +305,5 @@ routes_cli.add_command(retrieve)
 routes_cli.add_command(delete)
 routes_cli.add_command(update)
 routes_cli.add_command(list_routes, name="list")
+routes_cli.add_command(enable_basic_auth_routes, name="enable-basic-auth")
+routes_cli.add_command(enable_key_auth_routes, name="enable-key-auth")

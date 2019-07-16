@@ -1,13 +1,15 @@
 from operator import itemgetter
 from typing import Dict, Optional, Union
+from uuid import UUID
 
 import click
 from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
+from ._plugins import enable_basic_auth_services, enable_key_auth_services
 from ._util import get, parse_datetimes
-from .kong import general
+from .kong import general, plugins
 
 
 @click.command()
@@ -323,4 +325,6 @@ services_cli.add_command(add)
 services_cli.add_command(retrieve)
 services_cli.add_command(delete)
 services_cli.add_command(update)
+services_cli.add_command(enable_basic_auth_services, name="enable-basic-auth")
+services_cli.add_command(enable_key_auth_services, name="enable-key-auth")
 services_cli.add_command(list_services, name="list")
