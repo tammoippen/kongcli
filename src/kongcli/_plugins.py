@@ -120,6 +120,7 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
 enable_basic_auth_routes = _enable_basic_auth_on_resource("routes")
 enable_basic_auth_services = _enable_basic_auth_on_resource("services")
 enable_basic_auth_global = _enable_basic_auth_on_resource("global")
+# TODO update BA
 
 
 def _enable_key_auth_on_resource(resource: str) -> click.Command:
@@ -204,6 +205,7 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
 enable_key_auth_routes = _enable_key_auth_on_resource("routes")
 enable_key_auth_services = _enable_key_auth_on_resource("services")
 enable_key_auth_global = _enable_key_auth_on_resource("global")
+# TODO update KA
 
 
 def _enable_acl_on_resource(resource: str) -> click.Command:
@@ -293,6 +295,12 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
 enable_acl_routes = _enable_acl_on_resource("routes")
 enable_acl_services = _enable_acl_on_resource("services")
 enable_acl_global = _enable_acl_on_resource("global")
+# TODO update ACL
+
+# TODO enable rate-limit
+# TODO update rate-limit
+# TODO enable Request Size Limiting
+# TODO update Request Size Limiting
 
 
 @click.command()
