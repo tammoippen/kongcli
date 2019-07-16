@@ -7,7 +7,11 @@ from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._plugins import enable_basic_auth_services, enable_key_auth_services
+from ._plugins import (
+    enable_acl_services,
+    enable_basic_auth_services,
+    enable_key_auth_services,
+)
 from ._util import get, parse_datetimes
 from .kong import general, plugins
 
@@ -35,16 +39,19 @@ def list_services(ctx: click.Context) -> None:
             "port": s["port"],
             "path": s["path"],
             "whitelist": set(),
+            "blacklist": set(),
             "plugins": set(),
         }
         for p in plugins_data:
             if p.get("service_id") == s["id"]:
                 if p["name"] == "acl":
-                    sdata["whitelist"] |= set(p["config"]["whitelist"])
+                    sdata["whitelist"] |= set(p["config"].get("whitelist", []))
+                    sdata["blacklist"] |= set(p["config"].get("blacklist", []))
                 else:
                     sdata["plugins"] |= {p["name"]}
-        sdata["whitelist"] = "\n".join(sdata["whitelist"])
-        sdata["plugins"] = "\n".join(sdata["plugins"])
+        sdata["whitelist"] = "\n".join(sorted(sdata["whitelist"]))
+        sdata["blacklist"] = "\n".join(sorted(sdata["blacklist"]))
+        sdata["plugins"] = "\n".join(sorted(sdata["plugins"]))
         data.append(sdata)
 
     print(
@@ -327,4 +334,5 @@ services_cli.add_command(delete)
 services_cli.add_command(update)
 services_cli.add_command(enable_basic_auth_services, name="enable-basic-auth")
 services_cli.add_command(enable_key_auth_services, name="enable-key-auth")
+services_cli.add_command(enable_acl_services, name="enable-acl")
 services_cli.add_command(list_services, name="list")

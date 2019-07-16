@@ -7,7 +7,11 @@ from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._plugins import enable_basic_auth_routes, enable_key_auth_routes
+from ._plugins import (
+    enable_acl_routes,
+    enable_basic_auth_routes,
+    enable_key_auth_routes,
+)
 from ._util import get, parse_datetimes
 from .kong import general
 
@@ -35,6 +39,7 @@ def list_routes(ctx: click.Context) -> None:
             "hosts": r.get("hosts"),
             "paths": r["paths"],
             "whitelist": set(),
+            "blacklist": set(),
             "plugins": set(),
         }
         for s in services:
@@ -44,11 +49,13 @@ def list_routes(ctx: click.Context) -> None:
         for p in plugins:
             if p.get("route_id") == r["id"]:
                 if p["name"] == "acl":
-                    rdata["whitelist"] |= set(p["config"]["whitelist"])
+                    rdata["whitelist"] |= set(p["config"].get("whitelist", []))
+                    rdata["blacklist"] |= set(p["config"].get("blacklist", []))
                 else:
                     rdata["plugins"] |= {p["name"]}
-        rdata["whitelist"] = "\n".join(rdata["whitelist"])
-        rdata["plugins"] = "\n".join(rdata["plugins"])
+        rdata["whitelist"] = "\n".join(sorted(rdata["whitelist"]))
+        rdata["blacklist"] = "\n".join(sorted(rdata["blacklist"]))
+        rdata["plugins"] = "\n".join(sorted(rdata["plugins"]))
         data.append(rdata)
 
     print(
@@ -307,3 +314,4 @@ routes_cli.add_command(update)
 routes_cli.add_command(list_routes, name="list")
 routes_cli.add_command(enable_basic_auth_routes, name="enable-basic-auth")
 routes_cli.add_command(enable_key_auth_routes, name="enable-key-auth")
+routes_cli.add_command(enable_acl_routes, name="enable-key-auth")

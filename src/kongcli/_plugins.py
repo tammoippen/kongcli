@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 from uuid import UUID
 
 import click
+from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
@@ -102,10 +103,12 @@ def _enable_basic_auth_on_resource(resource: str):
             payload["config"]["anonymous"] = str(anonymous)
 
         if resource != "global":
-            plugin = plugins.enable_on(session, resource, id_name, "basic-auth", **payload)
+            plugin = plugins.enable_on(
+                session, resource, id_name, "basic-auth", **payload
+            )
         else:
-            payload['name'] = 'basic-auth'
-            plugin = general.add('plugins', session, **payload)
+            payload["name"] = "basic-auth"
+            plugin = general.add("plugins", session, **payload)
         print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_basic_auth
@@ -184,10 +187,12 @@ def _enable_key_auth_on_resource(resource: str):
             payload["config"]["key_names"] = list(key_names)
 
         if resource != "global":
-            plugin = plugins.enable_on(session, resource, id_name, "key-auth", **payload)
+            plugin = plugins.enable_on(
+                session, resource, id_name, "key-auth", **payload
+            )
         else:
-            payload['name'] = 'key-auth'
-            plugin = general.add('plugins', session, **payload)
+            payload["name"] = "key-auth"
+            plugin = general.add("plugins", session, **payload)
         print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_key_auth
@@ -196,6 +201,95 @@ def _enable_key_auth_on_resource(resource: str):
 enable_key_auth_routes = _enable_key_auth_on_resource("routes")
 enable_key_auth_services = _enable_key_auth_on_resource("services")
 enable_key_auth_global = _enable_key_auth_on_resource("global")
+
+
+def _enable_acl_on_resource(resource: str):
+    assert resource in ("services", "routes", "global")
+
+    @click.command(name=f"enable-acl-on-{resource}")
+    @click.option(
+        "--enabled",
+        type=bool,
+        default=True,
+        help="Whether this plugin will be applied.",
+    )
+    @click.option(
+        "--white",
+        multiple=True,
+        help="Arbitrary group names that are allowed to consume the Service or Route. One of `config.whitelist` or `config.blacklist` must be specified.",
+    )
+    @click.option(
+        "--black",
+        multiple=True,
+        help="Arbitrary group names that are not allowed to consume the Service or Route. One of config.whitelist or config.blacklist must be specified.",
+    )
+    @click.option(
+        "--hide_groups_header",
+        type=bool,
+        default=False,
+        help="Flag which if enabled (true), prevents the `X-Consumer-Groups` header to be sent in the request to the upstream service. (ignored in 0.13.x)",
+    )
+    @click.argument("id_name", required=resource != "global")
+    @click.pass_context
+    def enable_acl(
+        ctx: click.Context,
+        id_name: str,
+        enabled: bool,
+        white: Tuple[str, ...],
+        black: Tuple[str, ...],
+        hide_groups_header: bool,
+    ) -> None:
+        """Enable the acl plugin.
+
+        Note that the whitelist and blacklist models are mutually exclusive in their usage, as
+        they provide complimentary approaches. That is, you cannot configure an ACL with both
+        whitelist and blacklist configurations. An ACL with a whitelist provides a positive
+        security model, in which the configured groups are allowed access to the resources,
+        and all others are inherently rejected. By contrast, a blacklist configuration provides
+        a negative security model, in which certain groups are explicitly denied access to
+        the resource (and all others are inherently allowed)
+        """
+        session = ctx.obj["session"]
+        tablefmt = ctx.obj["tablefmt"]
+
+        payload = {
+            "enabled": enabled,
+            "config": {"hide_groups_header": hide_groups_header},
+        }
+        if white and black:
+            logger.error(
+                "Only one of whitelist (multiple `--white`) or blacklist (multiple `--black`) are allowed."
+            )
+            raise click.Abort()
+        if not white and not black:
+            logger.error(
+                "One of whitelist (multiple `--white`) or blacklist (multiple `--black`) has to be set."
+            )
+            raise click.Abort()
+
+        info = general.information()
+
+        if info["version"].startswith("0.13"):
+            payload["config"].pop("hide_groups_header")
+
+        if white:
+            payload["config"]["whitelist"] = list(white)
+        if black:
+            payload["config"]["blacklist"] = list(black)
+
+        if resource != "global":
+            plugin = plugins.enable_on(session, resource, id_name, "acl", **payload)
+        else:
+            payload["name"] = "acl"
+            plugin = general.add("plugins", session, **payload)
+        print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+
+    return enable_acl
+
+
+enable_acl_routes = _enable_acl_on_resource("routes")
+enable_acl_services = _enable_acl_on_resource("services")
+enable_acl_global = _enable_acl_on_resource("global")
 
 
 @click.command()
@@ -250,4 +344,7 @@ plugins_cli.add_command(enable_basic_auth_global)
 # plugins_cli.add_command(enable_key_auth_routes)
 # plugins_cli.add_command(enable_key_auth_services)
 plugins_cli.add_command(enable_key_auth_global)
+# plugins_cli.add_command(enable_acl_routes)
+# plugins_cli.add_command(enable_acl_services)
+plugins_cli.add_command(enable_acl_global)
 plugins_cli.add_command(delete)
