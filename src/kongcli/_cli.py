@@ -1,4 +1,3 @@
-from functools import partial
 import json
 import sys
 from typing import Optional
@@ -6,8 +5,6 @@ from typing import Optional
 import click
 from loguru import logger
 from tabulate import tabulate_formats
-
-click.option = partial(click.option, show_default=True)  # type: ignore # noqa: E402
 
 from ._consumers import consumers_cli, list_consumers
 from ._plugins import list_global_plugins, plugins_cli
@@ -19,7 +16,7 @@ from ._util import get
 from .kong.general import information
 
 
-@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.option("--url", envvar="KONG_BASE", help="Base url to kong.", required=True)
 @click.option("--apikey", envvar="KONG_APIKEY", help="API key for key-auth to kong.")
 @click.option("--basic", envvar="KONG_BASIC_USER", help="Basic auth username for kong.")
@@ -55,8 +52,11 @@ def cli(
     Some options can also be configured via environment variables:
 
     --url KONG_BASE
+
     --apikey KONG_APIKEY
+
     --basic KONG_BASIC_USER
+
     --passwd KONG_BASIC_PASSWD
     """
     ctx.ensure_object(dict)

@@ -1,6 +1,5 @@
 from operator import itemgetter
 from typing import Dict, Optional, Union
-from uuid import UUID
 
 import click
 from loguru import logger
@@ -13,7 +12,7 @@ from ._plugins import (
     enable_key_auth_services,
 )
 from ._util import get, parse_datetimes
-from .kong import general, plugins
+from .kong import general
 
 
 @click.command()

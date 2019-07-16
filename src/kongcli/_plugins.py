@@ -1,6 +1,6 @@
 import json
 from operator import itemgetter
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
 
 import click
@@ -64,7 +64,7 @@ def schema(ctx: click.Context, plugin_name: str) -> None:
     print(json.dumps(plugins.schema(session, plugin_name), indent=2, sort_keys=True))
 
 
-def _enable_basic_auth_on_resource(resource: str):
+def _enable_basic_auth_on_resource(resource: str) -> click.Command:
     assert resource in ("services", "routes", "global")
 
     @click.command(name=f"enable-basic-auth-on-{resource}")
@@ -98,7 +98,10 @@ def _enable_basic_auth_on_resource(resource: str):
         session = ctx.obj["session"]
         tablefmt = ctx.obj["tablefmt"]
 
-        payload = {"enabled": enabled, "config": {"hide_credentials": hide_credentials}}
+        payload: Dict[str, Any] = {
+            "enabled": enabled,
+            "config": {"hide_credentials": hide_credentials},
+        }
         if anonymous:
             payload["config"]["anonymous"] = str(anonymous)
 
@@ -119,7 +122,7 @@ enable_basic_auth_services = _enable_basic_auth_on_resource("services")
 enable_basic_auth_global = _enable_basic_auth_on_resource("global")
 
 
-def _enable_key_auth_on_resource(resource: str):
+def _enable_key_auth_on_resource(resource: str) -> click.Command:
     assert resource in ("services", "routes", "global")
 
     @click.command(name=f"enable-key-auth-on-{resource}")
@@ -173,7 +176,7 @@ def _enable_key_auth_on_resource(resource: str):
         session = ctx.obj["session"]
         tablefmt = ctx.obj["tablefmt"]
 
-        payload = {
+        payload: Dict[str, Any] = {
             "enabled": enabled,
             "config": {
                 "hide_credentials": hide_credentials,
@@ -203,7 +206,7 @@ enable_key_auth_services = _enable_key_auth_on_resource("services")
 enable_key_auth_global = _enable_key_auth_on_resource("global")
 
 
-def _enable_acl_on_resource(resource: str):
+def _enable_acl_on_resource(resource: str) -> click.Command:
     assert resource in ("services", "routes", "global")
 
     @click.command(name=f"enable-acl-on-{resource}")
@@ -252,7 +255,7 @@ def _enable_acl_on_resource(resource: str):
         session = ctx.obj["session"]
         tablefmt = ctx.obj["tablefmt"]
 
-        payload = {
+        payload: Dict[str, Any] = {
             "enabled": enabled,
             "config": {"hide_groups_header": hide_groups_header},
         }
@@ -267,7 +270,7 @@ def _enable_acl_on_resource(resource: str):
             )
             raise click.Abort()
 
-        info = general.information()
+        info = general.information(session)
 
         if info["version"].startswith("0.13"):
             payload["config"].pop("hide_groups_header")
