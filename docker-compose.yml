@@ -1,6 +1,11 @@
 version: '2.1'
 
 services:
+  httpbin:
+    image: kennethreitz/httpbin:latest
+    ports:
+      - "8080:80"
+
   database:
     image: postgres:9.6
     environment:
@@ -16,7 +21,7 @@ services:
       retries: 3
 
   migration:
-    image: kong:${KONG_VERSION_TAG:-0.13.1}
+    image: kong:${KONG_VERSION_TAG:-0.13}
     environment:
       KONG_DATABASE: postgres
       KONG_PG_HOST: database
@@ -30,7 +35,7 @@ services:
         condition: service_healthy
 
   kong:
-    image: kong:${KONG_VERSION_TAG:-0.13.1}
+    image: kong:${KONG_VERSION_TAG:-0.13}
     container_name: kong
     environment:
       KONG_DATABASE: postgres
