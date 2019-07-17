@@ -50,7 +50,9 @@ def test_dict_from_dot_duplicates():
 
 
 def test_parse_datetimes_empty():
-    assert parse_datetimes({}) == {}
+    d = {}
+    parse_datetimes(d)
+    assert d == {}
 
 
 @pytest.mark.parametrize('key', ('created_at', 'updated_at'))
