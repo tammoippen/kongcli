@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 import json
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Sequence, Tuple
 
 from cachetools import LRUCache
 from loguru import logger
@@ -17,7 +17,7 @@ def get(key: str, fkt: Callable[[], Any]) -> Any:
     return CACHE[key]
 
 
-def dict_from_dot(data: Tuple[Tuple[str, str], ...]) -> Dict[str, Any]:
+def dict_from_dot(data: Sequence[Tuple[str, str]]) -> Dict[str, Any]:
     result: Dict[str, Any] = {}
     for k, v in data:
         key_parts = k.split(".")
@@ -29,12 +29,17 @@ def dict_from_dot(data: Tuple[Tuple[str, str], ...]) -> Dict[str, Any]:
             assert isinstance(
                 curr, dict
             ), f"The key `{key}` is previously assigned to something else than a dict."
+
         value = v
         try:
             value = json.loads(v)
         except json.JSONDecodeError:
-            logger.info(f"Cannot parse `{v}` to json, assuming string.")
+            logger.warning(f"Cannot parse `{v}` to json, assuming string.")
             pass
+
+        assert (
+            key_parts[-1] not in curr
+        ), f"The key `{key}` is previously assigned to something else."
         curr[key_parts[-1]] = value
 
     return result
