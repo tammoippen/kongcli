@@ -9,7 +9,7 @@ import pytest
 from kongcli.kong.general import add, all_of, delete, information, retrieve, update
 
 
-def test_information(session, clean_kong):
+def test_information(session):
     resp = information(session)
     assert isinstance(resp, dict)
     assert os.environ.get("KONG_VERSION_TAG", "0.13.1") == resp["version"]
