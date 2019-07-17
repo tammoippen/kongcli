@@ -5,6 +5,7 @@ from psycopg2.extras import DictCursor
 import pytest
 
 from kongcli._session import LiveServerSession
+from kongcli.kong.general import add
 
 
 @pytest.fixture()
@@ -28,3 +29,12 @@ def clean_kong():
         )
         tables = [row[0] for row in cursor.fetchall()]
         cursor.execute(f"TRUNCATE TABLE {', '.join(tables)} CASCADE;")
+
+
+@pytest.fixture()
+def sample(clean_kong, session):
+    service = add('services', session, name='httpbin', url='https://httpbin.org')
+    route = add('routes', session, service={'id': service['id']}, paths=['/httpbin'])
+    consumer = add('consumers', session, username='foobar', custom_id='1234')
+
+    return service, route, consumer
