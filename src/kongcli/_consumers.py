@@ -69,10 +69,9 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
 
 
 @click.command()
-@click.option("--username", "-u", help="The unique username of the consumer.")
+@click.option("--username", help="The unique username of the consumer.")
 @click.option(
     "--custom_id",
-    "-c",
     help="Field for storing an existing unique ID for the consumer - useful for mapping Kong with users in your existing database.",
 )
 @click.pass_context
@@ -204,12 +203,10 @@ def delete(ctx: click.Context, id_username: str) -> None:
 @click.command()
 @click.option(
     "--username",
-    "-u",
     help="The unique username of the consumer. You must proviod either this field or custom_id.",
 )
 @click.option(
     "--custom_id",
-    "-c",
     help="The unique custom_id of the consaumer. You must proviod either this field or username.",
 )
 @click.argument("id_username")
