@@ -1,11 +1,24 @@
 import os
+from typing import List
 
+from click.testing import CliRunner
 import psycopg2
 from psycopg2.extras import DictCursor
 import pytest
 
+from kongcli._cli import cli
 from kongcli._session import LiveServerSession
 from kongcli.kong.general import add
+
+
+@pytest.fixture()
+def invoke():
+    runner = CliRunner()
+
+    def _invoke(args: List[str]):
+        return runner.invoke(cli, args)
+
+    return _invoke
 
 
 @pytest.fixture()
@@ -33,8 +46,8 @@ def clean_kong():
 
 @pytest.fixture()
 def sample(clean_kong, session):
-    service = add('services', session, name='httpbin', url='https://httpbin.org')
-    route = add('routes', session, service={'id': service['id']}, paths=['/httpbin'])
-    consumer = add('consumers', session, username='foobar', custom_id='1234')
+    service = add("services", session, name="httpbin", url="http://localhost:8080")
+    route = add("routes", session, service={"id": service["id"]}, paths=["/httpbin"])
+    consumer = add("consumers", session, username="foobar", custom_id="1234")
 
     return service, route, consumer

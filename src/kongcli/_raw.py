@@ -71,8 +71,8 @@ def raw(
     if data:
         payload = dict_from_dot(data)
     if payload:
-        print("> Body:")
-        print(">", json.dumps(payload))
+        print("> Body:", file=sys.stderr)
+        print(">", json.dumps(payload), file=sys.stderr)
 
     resp = session.request(method, url, headers=headers_dict, json=payload)
     print(f"< http/{resp.raw.version}", resp.status_code, resp.reason, file=sys.stderr)
