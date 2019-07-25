@@ -257,3 +257,4 @@ consumers_cli.add_command(delete)
 consumers_cli.add_command(add_groups, name="add-groups")
 consumers_cli.add_command(delete_groups, name="delete-groups")
 consumers_cli.add_command(update)
+# TODO key-auth, basic-auth: add, remove & update
