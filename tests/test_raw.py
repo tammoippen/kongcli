@@ -1,5 +1,5 @@
 import json
-from os import environ
+import re
 
 
 def test_raw_info(invoke, clean_kong):
@@ -13,9 +13,7 @@ def test_raw_info(invoke, clean_kong):
             continue
         if line:
             # last non-empty line is a json
-            assert json.loads(line)["version"].startswith(
-                environ.get("KONG_VERSION_TAG", "0.13")
-            )
+            assert re.match(r"[01]\.\d+(\.\d+)?", json.loads(line)["version"])
             break
 
 
@@ -32,7 +30,7 @@ def test_raw_single_data(invoke, clean_kong):
             # last non-empty line is a json
             data = json.loads(line)
             assert data["custom_id"] == "foobar"
-            assert "username" not in data
+            assert data.get("username") is None
             break
 
 

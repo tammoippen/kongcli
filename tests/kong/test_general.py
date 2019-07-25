@@ -1,6 +1,6 @@
 from math import ceil
 from operator import itemgetter
-import os
+import re
 from time import time
 import uuid
 
@@ -12,7 +12,7 @@ from kongcli.kong.general import add, all_of, delete, information, retrieve, upd
 def test_information(session):
     resp = information(session)
     assert isinstance(resp, dict)
-    assert os.environ.get("KONG_VERSION_TAG", "0.13.1") == resp["version"]
+    assert re.match(r"[01]\.\d+(\.\d+)?", resp["version"])
 
 
 @pytest.mark.parametrize(
@@ -31,14 +31,14 @@ def test_add_all_of_consumer(session, clean_kong):
     assert consumer1["created_at"] <= ceil(time()) * 1000
 
     consumer2 = add("consumers", session, custom_id="12345")
-    assert "username" not in consumer2
+    assert consumer2.get("username") is None
     assert consumer2["custom_id"] == "12345"
     assert uuid.UUID(consumer2["id"])
     assert consumer2["created_at"] <= ceil(time()) * 1000
 
     consumer3 = add("consumers", session, username="test-user2")
     assert consumer3["username"] == "test-user2"
-    assert "custom_id" not in consumer3
+    assert consumer3.get("custom_id") is None
     assert uuid.UUID(consumer3["id"])
     assert consumer3["created_at"] <= ceil(time()) * 1000
 
@@ -81,10 +81,10 @@ def test_delete_consumer(session, clean_kong):
         ("plugins", {"name": "key-auth"}),
     ),
 )
-def test_update_no_data(resource, params, session, clean_kong):
+def test_update_no_data(resource, params, session, clean_kong, kong_version):
     r1 = add(resource, session, **params)
 
-    if resource in ("services", "plugins"):
+    if resource in ("services", "plugins") or kong_version >= 0.14:
         r2 = update(resource, session, r1["id"])
         assert r1 == r2
     else:

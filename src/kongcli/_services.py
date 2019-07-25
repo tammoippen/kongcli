@@ -42,7 +42,7 @@ def list_services(ctx: click.Context) -> None:
             "plugins": set(),
         }
         for p in plugins_data:
-            if p.get("service_id") == s["id"]:
+            if s["id"] in (p.get("service_id"), p.get("service", {}).get("id")):
                 if p["name"] == "acl":
                     sdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     sdata["blacklist"] |= set(p["config"].get("blacklist", []))

@@ -47,7 +47,10 @@ def list_routes(ctx: click.Context) -> None:
                 rdata["service_name"] = s["name"]
                 break
         for p in plugins:
-            if p.get("route_id") == r["id"]:
+            if p.get("route", {}) is None:
+                # kong 1.x sets route to none, if plugin is not accoziated to a route
+                continue
+            if r["id"] in (p.get("route_id"), p.get("route", {}).get("id")):
                 if p["name"] == "acl":
                     rdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     rdata["blacklist"] |= set(p["config"].get("blacklist", []))

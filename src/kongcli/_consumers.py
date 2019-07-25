@@ -43,16 +43,19 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
             "key_auth": set(),
         }
         for a in acls:
-            if c["id"] == a["consumer_id"]:
+            if c["id"] in (a.get("consumer_id"), a.get("consumer", {}).get("id")):
                 cdata["acl_groups"] |= {a["group"]}
         for p in plugins:
-            if c["id"] == p.get("consumer_id"):
+            if p.get("consumer", {}) is None:
+                # version 1. sets `consumer` to none, if not assigned to a consumer
+                continue
+            if c["id"] in (p.get("consumer_id"), p.get("consumer", {}).get("id")):
                 cdata["plugins"] |= {p["name"]}
         for b in basic_auths:
-            if c["id"] == b.get("consumer_id"):
+            if c["id"] in (b.get("consumer_id"), b.get("consumer", {}).get("id")):
                 cdata["basic_auth"] |= {f'{b["username"]}:xxx'}
         for k in key_auths:
-            if c["id"] == k.get("consumer_id"):
+            if c["id"] in (k.get("consumer_id"), k.get("consumer", {}).get("id")):
                 key = k["key"]
                 if not full_keys:
                     key = f"{key[:6]}..."
@@ -64,7 +67,7 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
         cdata["key_auth"] = "\n".join(sorted(cdata["key_auth"]))
         data.append(cdata)
 
-    data.sort(key=lambda d: (len(d["custom_id"]), d["username"]))
+    data.sort(key=lambda d: d["username"])
     print(tabulate(data, headers="keys", tablefmt=tablefmt))
 
 

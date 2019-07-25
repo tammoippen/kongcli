@@ -1,10 +1,8 @@
 import json
-from os import environ
+import re
 
 
 def test_info(invoke):
     result = invoke(["info"])
     assert result.exit_code == 0
-    assert json.loads(result.output)["version"].startswith(
-        environ.get("KONG_VERSION_TAG", "0.13")
-    )
+    assert re.match(r"[01]\.\d+(\.\d+)?", json.loads(result.output)["version"])

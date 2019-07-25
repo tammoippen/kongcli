@@ -25,6 +25,9 @@ def test_add_acl_twice_to_consumer(session, clean_kong):
     assert (
         str(e.value).strip()
         == '400 Bad Request: {"group":"ACL group already exist for this consumer"}'
+    ) or (
+        str(e.value).strip()
+        == f'409 Conflict: {{"message":"UNIQUE violation detected on \'{{consumer={{id=\\"{consumer["id"]}\\"}},group=\\"some-nice-group\\"}}\'","name":"unique constraint violation","fields":{{"consumer":{{"id":"{consumer["id"]}"}},"group":"some-nice-group"}},"code":5}}'
     )
 
 
@@ -55,11 +58,14 @@ def test_no_basic_auths(session, clean_kong):
     assert [] == consumers.basic_auths(session, consumer["id"])
 
 
-def test_add_basic_auth(session, clean_kong):
+def test_add_basic_auth(session, clean_kong, kong_version):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     ba = consumers.add_basic_auth(session, consumer["id"], "some.username", "password")
     assert [ba] == consumers.basic_auths(session, consumer["id"])
-    assert ba["consumer_id"] == consumer["id"]
+    if kong_version >= 0.15:
+        assert ba["consumer"]["id"] == consumer["id"]
+    else:
+        assert ba["consumer_id"] == consumer["id"]
     assert ba["username"] == "some.username"
     assert ba["password"] != "password"  # some hash
 
@@ -85,7 +91,7 @@ def test_update_basic_auth_no_params(session, clean_kong):
         consumers.update_basic_auth(session, consumer["id"], ba["id"])
 
 
-def test_update_basic_auth_username(session, clean_kong):
+def test_update_basic_auth_username(session, clean_kong, kong_version):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     ba = consumers.add_basic_auth(session, consumer["id"], "some.username", "password")
     consumers.update_basic_auth(
@@ -95,6 +101,10 @@ def test_update_basic_auth_username(session, clean_kong):
     assert len(bas) == 1
     assert "username.some" == bas[0].pop("username")
     ba.pop("username")
+    if kong_version >= 0.15:
+        # apparently, if no password field is given in 1.0, the empty password is set
+        ba.pop("password")
+        bas[0].pop("password")
     assert ba == bas[0]
 
 
@@ -127,19 +137,25 @@ def test_no_key_auths(session, clean_kong):
     assert [] == consumers.key_auths(session, consumer["id"])
 
 
-def test_add_key_auth(session, clean_kong):
+def test_add_key_auth(session, clean_kong, kong_version):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     ka = consumers.add_key_auth(session, consumer["id"])
     assert [ka] == consumers.key_auths(session, consumer["id"])
-    assert ka["consumer_id"] == consumer["id"]
+    if kong_version >= 0.15:
+        assert ka["consumer"]["id"] == consumer["id"]
+    else:
+        assert ka["consumer_id"] == consumer["id"]
     assert ka["key"]
 
 
-def test_add_key_auth_with_key(session, clean_kong):
+def test_add_key_auth_with_key(session, clean_kong, kong_version):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     ka = consumers.add_key_auth(session, consumer["id"], key="1234567890")
     assert [ka] == consumers.key_auths(session, consumer["id"])
-    assert ka["consumer_id"] == consumer["id"]
+    if kong_version >= 0.15:
+        assert ka["consumer"]["id"] == consumer["id"]
+    else:
+        assert ka["consumer_id"] == consumer["id"]
     assert "1234567890" == ka["key"]
 
 

@@ -8,7 +8,7 @@ import pytest
 
 from kongcli._cli import cli
 from kongcli._session import LiveServerSession
-from kongcli.kong.general import add
+from kongcli.kong.general import add, information
 
 
 @pytest.fixture()
@@ -42,6 +42,11 @@ def clean_kong():
         )
         tables = [row[0] for row in cursor.fetchall()]
         cursor.execute(f"TRUNCATE TABLE {', '.join(tables)} CASCADE;")
+
+
+@pytest.fixture()
+def kong_version(session):
+    return float(".".join(information(session)["version"].split(".")[:2]))
 
 
 @pytest.fixture()

@@ -3,16 +3,16 @@ import pytest
 from kongcli.kong.plugins import enable_on, schema
 
 
-def test_schema(session):
+def test_schema(session, kong_version):
     resp = schema(session, "basic-auth")
-    assert isinstance(resp, dict)
-    assert resp == {
-        "no_consumer": True,
-        "fields": {
-            "hide_credentials": {"default": False, "type": "boolean"},
-            "anonymous": {"default": "", "func": "function", "type": "string"},
-        },
-    }
+    assert len(resp["fields"]) == 2
+    if kong_version >= 0.15:
+        assert {k for f in resp["fields"] for k in f.keys()} == {
+            "hide_credentials",
+            "anonymous",
+        }
+    else:
+        assert resp["fields"].keys() == {"hide_credentials", "anonymous"}
 
 
 def test_schema_unknown(session):
@@ -26,7 +26,7 @@ def test_schema_unknown(session):
 
 
 @pytest.mark.parametrize("resource", ("consumers", "services", "routes"))
-def test_enable_on(resource, session, sample):
+def test_enable_on(resource, session, sample, kong_version):
     service, route, consumer = sample
     mapping = {"consumers": consumer, "services": service, "routes": route}
 
@@ -40,4 +40,7 @@ def test_enable_on(resource, session, sample):
     assert plugin["name"] == "rate-limiting"
     assert plugin["enabled"] is True
     assert plugin["config"]["second"] == 5
-    assert plugin[f"{resource[:-1]}_id"] == mapping[resource]["id"]
+    if kong_version >= 0.15:
+        assert plugin[resource[:-1]]["id"] == mapping[resource]["id"]
+    else:
+        assert plugin[f"{resource[:-1]}_id"] == mapping[resource]["id"]
