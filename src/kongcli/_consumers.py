@@ -281,7 +281,9 @@ def list_key_auths(ctx: click.Context, id_username: str) -> None:
 
 
 @key_auth.command(name="add")
-@click.option("--key", help="The key to use. If not set, kong will auto-generate a key.")
+@click.option(
+    "--key", help="The key to use. If not set, kong will auto-generate a key."
+)
 @click.argument("id_username")
 @click.pass_context
 def add_key_auth(ctx: click.Context, id_username: str, key: Optional[str]) -> None:
@@ -316,7 +318,9 @@ def delete_key_auth(ctx: click.Context, id_username: str, key_id: UUID) -> None:
 @click.argument("key_id", type=click.UUID)
 @click.argument("new_key")
 @click.pass_context
-def update_key_auth(ctx: click.Context, id_username: str, key_id: UUID, new_key: str) -> None:
+def update_key_auth(
+    ctx: click.Context, id_username: str, key_id: UUID, new_key: str
+) -> None:
     """Update a key of an Consumer Object."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
@@ -348,10 +352,14 @@ def list_basic_auths(ctx: click.Context, id_username: str) -> None:
 
 @basic_auth.command(name="add")
 @click.option("--username", help="The username.", required=True, prompt=True)
-@click.option("--password", help="The password.", required=True, prompt=True, hide_input=True)
+@click.option(
+    "--password", help="The password.", required=True, prompt=True, hide_input=True
+)
 @click.argument("id_username")
 @click.pass_context
-def add_basic_auth(ctx: click.Context, id_username: str, username: str, password: str) -> None:
+def add_basic_auth(
+    ctx: click.Context, id_username: str, username: str, password: str
+) -> None:
     """Add basic-auth credentials to one Consumer Object."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
@@ -365,7 +373,9 @@ def add_basic_auth(ctx: click.Context, id_username: str, username: str, password
 @click.argument("id_username")
 @click.argument("basic_auth_id", type=click.UUID)
 @click.pass_context
-def delete_basic_auth(ctx: click.Context, id_username: str, basic_auth_id: UUID) -> None:
+def delete_basic_auth(
+    ctx: click.Context, id_username: str, basic_auth_id: UUID
+) -> None:
     """Delete a basic-auth object."""
     session = ctx.obj["session"]
 
@@ -379,7 +389,13 @@ def delete_basic_auth(ctx: click.Context, id_username: str, basic_auth_id: UUID)
 @click.argument("id_username")
 @click.argument("basic_auth_id", type=click.UUID)
 @click.pass_context
-def update_basic_auth(ctx: click.Context, id_username: str, basic_auth_id: UUID, username: Optional[str], password: Optional[str]) -> None:
+def update_basic_auth(
+    ctx: click.Context,
+    id_username: str,
+    basic_auth_id: UUID,
+    username: Optional[str],
+    password: Optional[str],
+) -> None:
     """Update a basic-auth object of an Consumer Object.
 
     At least one of username or password has to be set.
@@ -388,9 +404,11 @@ def update_basic_auth(ctx: click.Context, id_username: str, basic_auth_id: UUID,
     tablefmt = ctx.obj["tablefmt"]
 
     if not (username or password):
-        print('At least one of username or password has to be set.')
+        print("At least one of username or password has to be set.")
         raise click.Abort()
 
-    basic_auth = consumers.update_basic_auth(session, id_username, basic_auth_id, username, password)
+    basic_auth = consumers.update_basic_auth(
+        session, id_username, basic_auth_id, username, password
+    )
     parse_datetimes(basic_auth)
     print(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
