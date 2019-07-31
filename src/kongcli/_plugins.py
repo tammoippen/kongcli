@@ -127,7 +127,66 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
 enable_basic_auth_routes = _enable_basic_auth_on_resource("routes")
 enable_basic_auth_services = _enable_basic_auth_on_resource("services")
 enable_basic_auth_global = _enable_basic_auth_on_resource("global")
-# TODO update BA
+
+
+@click.command(name="update-basic-auth")
+@click.option("--enabled", type=bool, help="Whether this plugin will be applied.")
+@click.option(
+    "--hide_credentials",
+    type=bool,
+    help="Show or hide the credential from the upstream service. If `True`, the plugin will strip the credential from the request (i.e. the Authorization header) before proxying it.",
+)
+@click.option(
+    "--anonymous",
+    type=click.UUID,
+    help="Consumer id to use as an “anonymous” consumer if authentication fails. If empty (default), the request will fail with an authentication failure 4xx. Please note that this value must refer to the Consumer `id` attribute which is internal to Kong, and not its `custom_id`.",
+)
+@click.option(
+    "--service",
+    type=click.UUID,
+    help="The id of the Service which this plugin will target.",
+)
+@click.option(
+    "--route",
+    type=click.UUID,
+    help="The id of the Route which this plugin will target.",
+)
+@click.argument("plugin_id", type=click.UUID)
+@click.pass_context
+def update_basic_auth(
+    ctx: click.Context,
+    enabled: Optional[bool],
+    hide_credentials: Optional[bool],
+    anonymous: Optional[UUID],
+    service: Optional[UUID],
+    route: Optional[UUID],
+    plugin_id: UUID,
+) -> None:
+    """Update a basic-auth plugin."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    payload: Dict[str, Any] = {}
+    if enabled is not None:
+        payload["enabled"] = enabled
+    if hide_credentials is not None or anonymous or service or route:
+        payload["config"] = {}
+    if hide_credentials is not None:
+        payload["config"]["hide_credentials"] = hide_credentials
+    if anonymous:
+        payload["config"]["anonymous"] = str(anonymous)
+    if service:
+        payload["config"]["service"] = str(service)
+    if route:
+        payload["config"]["route"] = str(route)
+
+    if not payload:
+        print(f"No changes specified for `{plugin_id}`")
+        return
+    payload["name"] = "basic-auth"
+    plugin = general.update("plugins", session, str(plugin_id), **payload)
+    parse_datetimes(plugin)
+    print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
 
 def _enable_key_auth_on_resource(resource: str) -> click.Command:
@@ -301,6 +360,8 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
         else:
             payload["name"] = "acl"
             plugin = general.add("plugins", session, **payload)
+
+        parse_datetimes(plugin)
         print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_acl
@@ -366,6 +427,7 @@ plugins_cli.add_command(schema)
 # plugins_cli.add_command(enable_basic_auth_routes)
 # plugins_cli.add_command(enable_basic_auth_services)
 plugins_cli.add_command(enable_basic_auth_global)
+plugins_cli.add_command(update_basic_auth)
 # plugins_cli.add_command(enable_key_auth_routes)
 # plugins_cli.add_command(enable_key_auth_services)
 plugins_cli.add_command(enable_key_auth_global)
