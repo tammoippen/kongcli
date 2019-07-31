@@ -159,6 +159,13 @@ def test_add_key_auth_with_key(session, clean_kong, kong_version):
     assert "1234567890" == ka["key"]
 
 
+def test_lots_of_key_auths(session, clean_kong):
+    consumer = add("consumers", session, username="test-user", custom_id="1234")
+    for _i in range(1000):
+        consumers.add_key_auth(session, consumer["id"])
+    assert 1000 == len(consumers.key_auths(session, consumer["id"]))
+
+
 def test_delete_non_existing_key_auth(session, clean_kong):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     with pytest.raises(Exception) as e:

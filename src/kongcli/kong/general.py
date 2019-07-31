@@ -104,8 +104,16 @@ def get_assoziated(
     resource: str, session: requests.Session, id_: str, kind: str
 ) -> List[Dict[str, Any]]:
     logger.debug(f"Get `{kind}` of `{resource}` with id = `{id_}` ... ")
-    # TODO: paginate?
-    resp = session.get(f"/{resource}/{id_}/{kind}")
-    _check_resp(resp)
-    data: List[Dict[str, Any]] = resp.json().get("data", [])
+    data: List[Dict[str, Any]] = []
+    next_ = f"/{resource}/{id_}/{kind}"
+    while next_:
+        resp = session.get(next_)
+        _check_resp(resp)
+        jresp = resp.json()
+        data += jresp.get("data", [])
+        next_ = jresp.get("next")
+        if next_:
+            u = parse_url(next_)
+            next_ = u.request_uri
+            logger.debug(f"... next page `{next_}`")
     return data
