@@ -1,6 +1,7 @@
 import json
 import sys
 from typing import Optional, Tuple
+from uuid import UUID
 
 import click
 from pyfiglet import print_figlet
@@ -257,4 +258,70 @@ consumers_cli.add_command(delete)
 consumers_cli.add_command(add_groups, name="add-groups")
 consumers_cli.add_command(delete_groups, name="delete-groups")
 consumers_cli.add_command(update)
-# TODO key-auth, basic-auth: add, remove & update
+# TODO basic-auth: add, remove & update
+
+
+@consumers_cli.group(name="key-auth")
+def key_auth() -> None:
+    """Manage key auths of Consumer Objects."""
+    pass
+
+
+@key_auth.command(name="list")
+@click.argument("id_username")
+@click.pass_context
+def list_key_auths(ctx: click.Context, id_username: str) -> None:
+    """List keys of one Consumer Object."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    key_auths = consumers.key_auths(session, id_username)
+    for key in key_auths:
+        parse_datetimes(key)
+    print(tabulate(key_auths, headers="keys", tablefmt=tablefmt))
+
+
+@key_auth.command(name="add")
+@click.option("--key", help="The key to use. If not set, kong will auto-generate a key.")
+@click.argument("id_username")
+@click.pass_context
+def add_key_auth(ctx: click.Context, id_username: str, key: Optional[str]) -> None:
+    """Add a key to one Consumer Object.
+
+    **Note**: It is recommended to let Kong auto-generate the key. Only specify it
+    yourself if you are migrating an existing system to Kong. You must re-use your
+    keys to make the migration to Kong transparent to your Consumers.
+    """
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    key_auth = consumers.add_key_auth(session, id_username, key)
+    parse_datetimes(key_auth)
+    print(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
+
+
+@key_auth.command(name="delete")
+@click.argument("id_username")
+@click.argument("key_id", type=click.UUID)
+@click.pass_context
+def delete_key_auth(ctx: click.Context, id_username: str, key_id: UUID) -> None:
+    """Delete a key."""
+    session = ctx.obj["session"]
+
+    consumers.delete_key_auth(session, id_username, key_id)
+    print(f"Deleted key `{key_id}` of consumer `{id_username}`!")
+
+
+@key_auth.command(name="update")
+@click.argument("id_username")
+@click.argument("key_id", type=click.UUID)
+@click.argument("new_key")
+@click.pass_context
+def update_key_auth(ctx: click.Context, id_username: str, key_id: UUID, new_key: str) -> None:
+    """Update a key of an Consumer Object."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    key_auth = consumers.update_key_auth(session, id_username, key_id, new_key)
+    parse_datetimes(key_auth)
+    print(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
