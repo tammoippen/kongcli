@@ -42,6 +42,9 @@ def list_services(ctx: click.Context) -> None:
             "plugins": set(),
         }
         for p in plugins_data:
+            if p.get("service", {}) is None:
+                # kong 1.x sets service to none, if plugin is not accoziated to a service
+                continue
             if s["id"] in (p.get("service_id"), p.get("service", {}).get("id")):
                 if p["name"] == "acl":
                     sdata["whitelist"] |= set(p["config"].get("whitelist", []))

@@ -8,7 +8,7 @@ from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get
+from ._util import get, parse_datetimes
 from .kong import general, plugins
 
 
@@ -94,7 +94,12 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
         hide_credentials: bool,
         anonymous: Optional[UUID],
     ) -> None:
-        """Enable the basic-auth plugin."""
+        """Enable the basic-auth plugin.
+
+        Once applied, any user with a valid credential can access the resource. To restrict usage
+        to only some of the authenticated users, also add the ACL plugin (not covered here) and
+        create whitelist or blacklist groups of users.
+        """
         session = ctx.obj["session"]
         tablefmt = ctx.obj["tablefmt"]
 
@@ -112,6 +117,8 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
         else:
             payload["name"] = "basic-auth"
             plugin = general.add("plugins", session, **payload)
+
+        parse_datetimes(plugin)
         print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_basic_auth
@@ -173,7 +180,12 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
         anonymous: Optional[UUID],
         run_on_preflight: bool,
     ) -> None:
-        """Enable the key-auth plugin."""
+        """Enable the key-auth plugin.
+
+        Once applied, any user with a valid credential can access the Service. To restrict
+        usage to only some of the authenticated users, also add the ACL plugin (not covered
+        here) and create whitelist or blacklist groups of users.
+        """
         session = ctx.obj["session"]
         tablefmt = ctx.obj["tablefmt"]
 
@@ -197,6 +209,8 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
         else:
             payload["name"] = "key-auth"
             plugin = general.add("plugins", session, **payload)
+
+        parse_datetimes(plugin)
         print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_key_auth
