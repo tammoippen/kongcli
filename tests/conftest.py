@@ -23,7 +23,9 @@ def invoke():
 
 @pytest.fixture()
 def session():
-    return LiveServerSession("http://localhost:8001")
+    session = LiveServerSession("http://localhost:8001")
+    yield session
+    session.close()
 
 
 @pytest.fixture()

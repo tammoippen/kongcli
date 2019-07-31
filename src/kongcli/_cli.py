@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Optional
+from typing import Any, Optional
 
 import click
 from loguru import logger
@@ -81,6 +81,12 @@ def cli(
     ctx.obj["session"] = session
     ctx.obj["tablefmt"] = tablefmt
     ctx.obj["font"] = font
+
+
+@cli.resultcallback()
+def cleanup(*args: Any, **kwargs: Any) -> None:
+    ctx = click.get_current_context()
+    ctx.obj["session"].close()
 
 
 cli.add_command(consumers_cli)
