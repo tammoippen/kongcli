@@ -258,7 +258,6 @@ consumers_cli.add_command(delete)
 consumers_cli.add_command(add_groups, name="add-groups")
 consumers_cli.add_command(delete_groups, name="delete-groups")
 consumers_cli.add_command(update)
-# TODO basic-auth: add, remove & update
 
 
 @consumers_cli.group(name="key-auth")
@@ -325,3 +324,73 @@ def update_key_auth(ctx: click.Context, id_username: str, key_id: UUID, new_key:
     key_auth = consumers.update_key_auth(session, id_username, key_id, new_key)
     parse_datetimes(key_auth)
     print(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
+
+
+@consumers_cli.group(name="basic-auth")
+def basic_auth() -> None:
+    """Manage basic auths of Consumer Objects."""
+    pass
+
+
+@basic_auth.command(name="list")
+@click.argument("id_username")
+@click.pass_context
+def list_basic_auths(ctx: click.Context, id_username: str) -> None:
+    """List basic-auths of one Consumer Object."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    basic_auths = consumers.basic_auths(session, id_username)
+    for key in basic_auths:
+        parse_datetimes(key)
+    print(tabulate(basic_auths, headers="keys", tablefmt=tablefmt))
+
+
+@basic_auth.command(name="add")
+@click.option("--username", help="The username.", required=True, prompt=True)
+@click.option("--password", help="The password.", required=True, prompt=True, hide_input=True)
+@click.argument("id_username")
+@click.pass_context
+def add_basic_auth(ctx: click.Context, id_username: str, username: str, password: str) -> None:
+    """Add basic-auth credentials to one Consumer Object."""
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    basic_auth = consumers.add_basic_auth(session, id_username, username, password)
+    parse_datetimes(basic_auth)
+    print(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
+
+
+@basic_auth.command(name="delete")
+@click.argument("id_username")
+@click.argument("basic_auth_id", type=click.UUID)
+@click.pass_context
+def delete_basic_auth(ctx: click.Context, id_username: str, basic_auth_id: UUID) -> None:
+    """Delete a basic-auth object."""
+    session = ctx.obj["session"]
+
+    consumers.delete_basic_auth(session, id_username, basic_auth_id)
+    print(f"Deleted credentials `{basic_auth_id}` of consumer `{id_username}`!")
+
+
+@basic_auth.command(name="update")
+@click.option("--username", help="The username.")
+@click.option("--password", help="The password.")
+@click.argument("id_username")
+@click.argument("basic_auth_id", type=click.UUID)
+@click.pass_context
+def update_basic_auth(ctx: click.Context, id_username: str, basic_auth_id: UUID, username: Optional[str], password: Optional[str]) -> None:
+    """Update a basic-auth object of an Consumer Object.
+
+    At least one of username or password has to be set.
+    """
+    session = ctx.obj["session"]
+    tablefmt = ctx.obj["tablefmt"]
+
+    if not (username or password):
+        print('At least one of username or password has to be set.')
+        raise click.Abort()
+
+    basic_auth = consumers.update_basic_auth(session, id_username, basic_auth_id, username, password)
+    parse_datetimes(basic_auth)
+    print(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
