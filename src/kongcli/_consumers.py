@@ -141,8 +141,8 @@ def retrieve(
         )
     if key_auths:
         user["key_auth"] = "\n".join(
-            f'{ba["id"]}: {ba["username"]}:xxx'
-            for ba in consumers.key_auths(session, id_username)
+            f"{ka['id']}: {ka['key']}"
+            for ka in consumers.key_auths(session, id_username)
         )
     if plugins:
         user["plugins"] = "\n\n".join(
