@@ -31,9 +31,9 @@ def list_global_plugins(ctx: click.Context) -> None:
             and p.get("service_id") is None
             and p.get("consumer_id") is None
         ):
-            data.append(
-                {"name": p["name"], "config": json.dumps(p["config"], indent=2)}
-            )
+            p["config"] = json.dumps(p["config"], indent=2, sort_keys=True)
+            parse_datetimes(p)
+            data.append(p)
 
     print(
         tabulate(
@@ -52,7 +52,31 @@ def list_plugins(ctx: click.Context) -> None:
 
     print_figlet("Plugins", font=font, width=160)
     plugins = get("plugins", lambda: general.all_of("plugins", session))
-    print(tabulate(plugins, headers="keys", tablefmt=tablefmt))
+    services = get("services", lambda: general.all_of("services", session))
+    consumers = get("consumers", lambda: general.all_of("consumers", session))
+
+    for p in plugins:
+        p["config"] = json.dumps(p["config"], indent=2, sort_keys=True)
+        parse_datetimes(p)
+        service_id = p.get("service_id")
+        if service_id:
+            for s in services:
+                if s["id"] == service_id:
+                    p["service_name"] = s["name"]
+                    break
+        consumer_id = p.get("consumer_id")
+        if consumer_id:
+            for c in consumers:
+                if c["id"] == consumer_id:
+                    p["consumer_name"] = c["username"]
+                    p["consumer_custom_id"] = c["custom_id"]
+                    break
+
+    print(
+        tabulate(
+            sorted(plugins, key=itemgetter("name")), headers="keys", tablefmt=tablefmt
+        )
+    )
 
 
 @click.command()

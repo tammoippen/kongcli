@@ -17,8 +17,13 @@ from .kong import consumers, general
     default=False,
     help="Whether to show full keys for key-auth.",
 )
+@click.option(
+    "--full-plugins/--no-full-plugins",
+    default=False,
+    help="Whether to show full plugin config.",
+)
 @click.pass_context
-def list_consumers(ctx: click.Context, full_keys: bool) -> None:
+def list_consumers(ctx: click.Context, full_keys: bool, full_plugins: bool) -> None:
     """List all consumers along with relevant information."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
@@ -39,7 +44,7 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
             "custom_id": c.get("custom_id", ""),
             "username": c.get("username", ""),
             "acl_groups": set(),
-            "plugins": set(),
+            "plugins": [],
             "basic_auth": set(),
             "key_auth": set(),
         }
@@ -51,7 +56,10 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
                 # version 1. sets `consumer` to none, if not assigned to a consumer
                 continue
             if c["id"] in (p.get("consumer_id"), p.get("consumer", {}).get("id")):
-                cdata["plugins"] |= {p["name"]}
+                if full_plugins:
+                    cdata["plugins"] += [(p["name"], p["config"])]
+                else:
+                    cdata["plugins"] += [p["name"]]
         for b in basic_auths:
             if c["id"] in (b.get("consumer_id"), b.get("consumer", {}).get("id")):
                 cdata["basic_auth"] |= {f'{b["username"]}:xxx'}
@@ -63,12 +71,18 @@ def list_consumers(ctx: click.Context, full_keys: bool) -> None:
                 cdata["key_auth"] |= {key}
 
         cdata["acl_groups"] = "\n".join(sorted(cdata["acl_groups"]))
-        cdata["plugins"] = "\n".join(sorted(cdata["plugins"]))
+        if full_plugins:
+            cdata["plugins"] = "\n".join(
+                f"{name}:\n{json.dumps(p, indent=2, sort_keys=True)}"
+                for name, p in sorted(cdata["plugins"])
+            )
+        else:
+            cdata["plugins"] = "\n".join(sorted(cdata["plugins"]))
         cdata["basic_auth"] = "\n".join(sorted(cdata["basic_auth"]))
         cdata["key_auth"] = "\n".join(sorted(cdata["key_auth"]))
         data.append(cdata)
 
-    data.sort(key=lambda d: d["username"])
+    data.sort(key=lambda d: (len(d["custom_id"]), d["username"]))
     print(tabulate(data, headers="keys", tablefmt=tablefmt))
 
 

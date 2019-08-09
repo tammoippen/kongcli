@@ -1,3 +1,4 @@
+import json
 from operator import itemgetter
 from typing import Dict, Optional, Union
 
@@ -16,8 +17,13 @@ from .kong import general
 
 
 @click.command()
+@click.option(
+    "--full-plugins/--no-full-plugins",
+    default=False,
+    help="Whether to show full plugin config.",
+)
 @click.pass_context
-def list_services(ctx: click.Context) -> None:
+def list_services(ctx: click.Context, full_plugins: bool) -> None:
     """List all services along with relevant information."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
@@ -39,7 +45,7 @@ def list_services(ctx: click.Context) -> None:
             "path": s["path"],
             "whitelist": set(),
             "blacklist": set(),
-            "plugins": set(),
+            "plugins": [],
         }
         for p in plugins_data:
             if p.get("service", {}) is None:
@@ -49,11 +55,15 @@ def list_services(ctx: click.Context) -> None:
                 if p["name"] == "acl":
                     sdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     sdata["blacklist"] |= set(p["config"].get("blacklist", []))
+                elif full_plugins:
+                    sdata["plugins"] += [
+                        f"{p['name']}:\n{json.dumps(p['config'], indent=2, sort_keys=True)}"
+                    ]
                 else:
-                    sdata["plugins"] |= {p["name"]}
+                    sdata["plugins"] += [p["name"]]
         sdata["whitelist"] = "\n".join(sorted(sdata["whitelist"]))
         sdata["blacklist"] = "\n".join(sorted(sdata["blacklist"]))
-        sdata["plugins"] = "\n".join(sorted(sdata["plugins"]))
+        sdata["plugins"] = "\n".join(sdata["plugins"])
         data.append(sdata)
 
     print(

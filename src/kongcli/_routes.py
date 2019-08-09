@@ -1,3 +1,4 @@
+import json
 from operator import itemgetter
 from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
@@ -17,8 +18,13 @@ from .kong import general
 
 
 @click.command()
+@click.option(
+    "--full-plugins/--no-full-plugins",
+    default=False,
+    help="Whether to show full plugin config.",
+)
 @click.pass_context
-def list_routes(ctx: click.Context) -> None:
+def list_routes(ctx: click.Context, full_plugins: bool) -> None:
     """List all routes along with relevant information."""
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
@@ -35,12 +41,13 @@ def list_routes(ctx: click.Context) -> None:
         rdata = {
             "route_id": r["id"],
             "service_name": None,
+            "methods": r["methods"],
             "protocols": r["protocols"],
             "hosts": r.get("hosts"),
             "paths": r["paths"],
             "whitelist": set(),
             "blacklist": set(),
-            "plugins": set(),
+            "plugins": [],
         }
         for s in services:
             if s["id"] == r["service"]["id"]:
@@ -54,11 +61,15 @@ def list_routes(ctx: click.Context) -> None:
                 if p["name"] == "acl":
                     rdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     rdata["blacklist"] |= set(p["config"].get("blacklist", []))
+                elif full_plugins:
+                    rdata["plugins"] += [
+                        f"{p['name']}:\n{json.dumps(p['config'], indent=2, sort_keys=True)}"
+                    ]
                 else:
-                    rdata["plugins"] |= {p["name"]}
+                    rdata["plugins"] += [p["name"]]
         rdata["whitelist"] = "\n".join(sorted(rdata["whitelist"]))
         rdata["blacklist"] = "\n".join(sorted(rdata["blacklist"]))
-        rdata["plugins"] = "\n".join(sorted(rdata["plugins"]))
+        rdata["plugins"] = "\n".join(rdata["plugins"])
         data.append(rdata)
 
     print(
