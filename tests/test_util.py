@@ -70,3 +70,26 @@ def test_parse_datetimes_key(key):
     d = {key: now.timestamp() * 1000}
     parse_datetimes(d)
     assert d[key] == now
+
+
+def test_raw_input():
+    d = dict_from_dot(
+        (
+            ("config.limits.menu-preclassify.minute", "60"),
+            ("config.limits.menu-result-delete.minute", "600"),
+            ("config.limits.menu-result-receive.minute", "600"),
+            ("config.limits.unspecific.minute", "30"),
+            ("config.limits.menu-upload.day", "50"),
+        )
+    )
+    assert d == {
+        "config": {
+            "limits": {
+                "menu-preclassify": {"minute": 60},
+                "menu-result-delete": {"minute": 600},
+                "menu-result-receive": {"minute": 600},
+                "unspecific": {"minute": 30},
+                "menu-upload": {"day": 50},
+            }
+        }
+    }

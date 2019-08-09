@@ -23,7 +23,7 @@ def dict_from_dot(data: Sequence[Tuple[str, str]]) -> Dict[str, Any]:
         key_parts = k.split(".")
         curr = result
         for key in key_parts[:-1]:
-            if key not in result:
+            if key not in curr:
                 curr[key] = {}
             curr = curr[key]
             assert isinstance(
