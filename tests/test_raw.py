@@ -3,10 +3,10 @@ import re
 
 
 def test_raw_info(invoke, clean_kong):
-    result = invoke(["raw", "GET", "/"])
+    result = invoke(["raw", "GET", "/"], mix_stderr=False)
     assert result.exit_code == 0
-    assert result.output.startswith("> GET http://localhost:8001/\n")
-    lines = result.output.split("\n")
+    assert result.stderr.startswith("> GET http://localhost:8001/\n")
+    lines = result.stdout.split("\n")
 
     for line in reversed(lines):
         if not line:
@@ -18,10 +18,12 @@ def test_raw_info(invoke, clean_kong):
 
 
 def test_raw_single_data(invoke, clean_kong):
-    result = invoke(["raw", "-d", "custom_id", "foobar", "POST", "/consumers"])
+    result = invoke(
+        ["raw", "-d", "custom_id", "foobar", "POST", "/consumers"], mix_stderr=False
+    )
     assert result.exit_code == 0
-    assert result.output.startswith("> POST http://localhost:8001/consumers\n")
-    lines = result.output.split("\n")
+    assert result.stderr.startswith("> POST http://localhost:8001/consumers\n")
+    lines = result.stdout.split("\n")
 
     for line in reversed(lines):
         if not line:
@@ -46,11 +48,12 @@ def test_raw_multiple_data(invoke, clean_kong):
             "barfoo",
             "POST",
             "/consumers",
-        ]
+        ],
+        mix_stderr=False,
     )
     assert result.exit_code == 0
-    assert result.output.startswith("> POST http://localhost:8001/consumers\n")
-    lines = result.output.split("\n")
+    assert result.stderr.startswith("> POST http://localhost:8001/consumers\n")
+    lines = result.stdout.split("\n")
 
     for line in reversed(lines):
         if not line:
@@ -64,10 +67,12 @@ def test_raw_multiple_data(invoke, clean_kong):
 
 
 def test_raw_single_header(invoke, clean_kong):
-    result = invoke(["raw", "-H", "X-Custom-Header", "foobar", "GET", "/"])
+    result = invoke(
+        ["raw", "-H", "X-Custom-Header", "foobar", "GET", "/"], mix_stderr=False
+    )
     assert result.exit_code == 0
-    assert result.output.startswith("> GET http://localhost:8001/\n")
-    lines = result.output.split("\n")
+    assert result.stderr.startswith("> GET http://localhost:8001/\n")
+    lines = result.stderr.split("\n")
 
     assert any(line == "> X-Custom-Header: foobar" for line in lines)
 
@@ -84,11 +89,12 @@ def test_raw_multiple_header(invoke, clean_kong):
             "barfoo",
             "GET",
             "/",
-        ]
+        ],
+        mix_stderr=False,
     )
     assert result.exit_code == 0
-    assert result.output.startswith("> GET http://localhost:8001/\n")
-    lines = result.output.split("\n")
+    assert result.stderr.startswith("> GET http://localhost:8001/\n")
+    lines = result.stderr.split("\n")
 
     assert any(line == "> X-Custom-Header: foobar" for line in lines)
     assert any(line == "> X-Custom-Header2: barfoo" for line in lines)

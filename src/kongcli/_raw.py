@@ -1,5 +1,4 @@
 import json
-import sys
 from typing import Tuple
 
 import click
@@ -31,26 +30,19 @@ def raw(
 
     You can provide headers using the --header / -H option:
 
+    \b
     - to get the header 'Accept: application/json' use
-
         -H Accept application/json
-
     - to get the header 'Content-Type: application/json; charset=utf-8' use
-
         -H Content-Type "application/json; charset=utf-8"
 
+    \b
     You can provide a json body using the --data / -d option
-
       -d foo bar          # => {"foo": "bar"}
-
       -d foo true         # => {"foo": true}
-
       -d foo '"true"'     # => {"foo": "true"}
-
       -d foo.bar.baz 2.3  # => {"foo": {"bar": {"baz": 2.3}}}
-
       -d name bar -d config.methods '["GET", "POST"]'
-
       # => {"name": "bar", "config": {"methods": ["GET", "POST"]}}
 
     If first argument to `--data / -d` is the key. It is split by dots
@@ -60,23 +52,23 @@ def raw(
     """
     session: LiveServerSession = ctx.obj["session"]
     headers_dict = {h[0]: h[1] for h in header}
-    print(f"> {method} {session.prefix_url}{url}", file=sys.stderr)
+    click.echo(f"> {method} {session.prefix_url}{url}", err=True)
     for k, v in session.headers.items():
-        print("> ", k, ": ", v, sep="", file=sys.stderr)
+        click.echo(f"> {k}: {v}", err=True)
     for k, v in headers_dict.items():
-        print("> ", k, ": ", v, sep="", file=sys.stderr)
-    print(">", file=sys.stderr)
+        click.echo(f"> {k}: {v}", err=True)
+    click.echo(">", err=True)
 
     payload = None
     if data:
         payload = dict_from_dot(data)
     if payload:
-        print("> Body:", file=sys.stderr)
-        print(">", json.dumps(payload), file=sys.stderr)
+        click.echo("> Body:", err=True)
+        click.echo(f">{json.dumps(payload)}", err=True)
 
     resp = session.request(method, url, headers=headers_dict, json=payload)
-    print(f"< http/{resp.raw.version}", resp.status_code, resp.reason, file=sys.stderr)
+    click.echo(f"< http/{resp.raw.version} {resp.status_code} {resp.reason}", err=True)
     for k, v in resp.headers.items():
-        print("< ", k, ": ", v, sep="", file=sys.stderr)
-    print(file=sys.stderr)
-    print(resp.text)
+        click.echo(f"< {k}: {v}", err=True)
+    click.echo(err=True)
+    click.echo(resp.text)
