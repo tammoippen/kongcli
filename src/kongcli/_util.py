@@ -17,6 +17,11 @@ def get(key: str, fkt: Callable[[], Any]) -> Any:
     return CACHE[key]
 
 
+def _reset_cache() -> None:
+    if CACHE is not None:
+        CACHE.clear()
+
+
 def dict_from_dot(data: Sequence[Tuple[str, str]]) -> Dict[str, Any]:
     result: Dict[str, Any] = {}
     for k, v in data:

@@ -8,6 +8,7 @@ import pytest
 
 from kongcli._cli import cli
 from kongcli._session import LiveServerSession
+from kongcli._util import _reset_cache
 from kongcli.kong.general import add, information
 
 
@@ -30,6 +31,7 @@ def session():
 
 @pytest.fixture()
 def clean_kong():
+    _reset_cache()
     with psycopg2.connect(
         database=os.environ.get("KONG_PG_DATABASE", "kong"),
         user=os.environ.get("KONG_PG_USER", "kong"),
