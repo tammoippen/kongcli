@@ -12,13 +12,15 @@ from .kong import consumers, general
 
 @click.command()
 @click.option(
-    "--full-keys/--no-full-keys",
+    "--full-keys",
     default=False,
+    is_flag=True,
     help="Whether to show full keys for key-auth.",
 )
 @click.option(
-    "--full-plugins/--no-full-plugins",
+    "--full-plugins",
     default=False,
+    is_flag=True,
     help="Whether to show full plugin config.",
 )
 @click.pass_context
