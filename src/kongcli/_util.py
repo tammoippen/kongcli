@@ -67,3 +67,7 @@ def parse_datetimes(obj: Dict[str, Any]) -> None:
             obj["updated_at"] = datetime.fromtimestamp(
                 obj["updated_at"] / 1000, timezone.utc
             )
+
+
+def sort_dict(obj: Dict[str, Any]) -> Dict[str, Any]:
+    return json.loads(json.dumps(obj, sort_keys=True))

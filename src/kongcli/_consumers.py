@@ -6,7 +6,7 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get, parse_datetimes
+from ._util import get, parse_datetimes, sort_dict
 from .kong import consumers, general
 
 
@@ -112,23 +112,25 @@ def create(
     tablefmt = ctx.obj["tablefmt"]
 
     user = general.add("consumers", session, username=username, custom_id=custom_id)
+    user = sort_dict(user)
     parse_datetimes(user)
     click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
 @click.argument("id_username")
-@click.option("--acls/--no-acls", default=False, help="Get all acls for the user.")
+@click.option("--acls", default=False, is_flag=True, help="Get all acls for the user.")
 @click.option(
-    "--basic-auths/--no-basic-auths",
+    "--basic-auths",
     default=False,
+    is_flag=True,
     help="Get all basic-auth for the user.",
 )
 @click.option(
-    "--key-auths/--no-key-auths", default=False, help="Get all key-auth for the user."
+    "--key-auths", default=False, is_flag=True, help="Get all key-auth for the user."
 )
 @click.option(
-    "--plugins/--no-plugins", default=False, help="Get all plugins for the user."
+    "--plugins", default=False, is_flag=True, help="Get all plugins for the user."
 )
 @click.pass_context
 def retrieve(
@@ -145,6 +147,7 @@ def retrieve(
     tablefmt = ctx.obj["tablefmt"]
 
     user = general.retrieve("consumers", session, id_username)
+    sort_dict(user)
     parse_datetimes(user)
 
     if acls:

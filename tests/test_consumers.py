@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+from uuid import UUID
+
 import pytest
 
 from kongcli.kong import consumers, plugins
@@ -11,8 +14,8 @@ def test_list_empty(invoke, clean_kong):
         result.output
         == """\
  _______  _____  __   _ _______ _     _ _______ _______  ______ _______
- |       |     | | \  | |______ |     | |  |  | |______ |_____/ |______
- |_____  |_____| |  \_| ______| |_____| |  |  | |______ |    \_ ______|
+ |       |     | | \\  | |______ |     | |  |  | |______ |_____/ |______
+ |_____  |_____| |  \\_| ______| |_____| |  |  | |______ |    \\_ ______|
                                                                        \n\n\n"""
     )
 
@@ -144,3 +147,127 @@ def test_list_single_plugins(invoke, sample, session, full_plugins):
         assert rest[0] == "{"
         assert rest[6] == '"minute": 20,'
         assert rest[-1] == "}"
+
+
+def test_create_no_required(invoke, clean_kong):
+    result = invoke(["consumers", "create"])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert (
+        result.stderr
+        == "You must set either `--username` or `--custom_id` with the request.\nAborted!\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "username,custom", [("xyz", "1234"), (None, "1234"), ("xyz", None)]
+)
+def test_create(invoke, clean_kong, username, custom):
+    extra = []
+    if username:
+        extra += ["--username", username]
+    if custom:
+        extra += ["--custom_id", custom]
+    result = invoke(
+        ["--font", "cyberlarge", "--tablefmt", "psql", "consumers", "create"] + extra
+    )
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 6
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "created_at",
+        "custom_id",
+        "id",
+        "tags",
+        "username",
+        "",
+    ]
+    values = [v.strip() for v in lines[3].split("|")]
+    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    assert values[2] == "" if custom is None else custom
+    assert UUID(values[3])
+    assert values[4] == ""
+    assert values[5] == "" if username is None else username
+
+
+@pytest.mark.parametrize("acls", (True, False))
+@pytest.mark.parametrize("ba", (True, False))
+@pytest.mark.parametrize("ka", (True, False))
+@pytest.mark.parametrize("pl", (True, False))
+def test_retrive(invoke, sample, session, acls, ba, ka, pl):
+    service, route, consumer = sample
+    consumers.add_group(session, consumer["id"], "group2")
+    consumers.add_group(session, consumer["id"], "group1")
+    consumers.add_basic_auth(session, consumer["id"], "username", "passwd")
+    consumers.add_key_auth(session, consumer["id"], "key-abcdefg")
+    consumers.add_key_auth(session, consumer["id"], "key-hijklmn")
+    plugins.enable_on(
+        session, "consumers", consumer["id"], "rate-limiting", config={"minute": 20}
+    )
+    plugins.enable_on(
+        session, "routes", route["id"], "rate-limiting", config={"minute": 25}
+    )
+
+    extra = []
+    if acls:
+        extra += ["--acls"]
+    if ba:
+        extra += ["--basic-auths"]
+    if ka:
+        extra += ["--key-auths"]
+    if pl:
+        extra += ["--plugins"]
+
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "retrieve",
+            consumer["id"],
+        ]
+        + extra
+    )
+    assert result.exit_code == 0
+    values = [
+        [v.strip() for v in line.split("|")] for line in result.output.split("\n")
+    ]
+    assert values[1][:6] == ["", "custom_id", "created_at", "id", "tags", "username"]
+    rest = values[1][6:]
+    if acls:
+        assert rest.pop(0) == "acls"
+    if ba:
+        assert rest.pop(0) == "basic_auth"
+    if ka:
+        assert rest.pop(0) == "key_auth"
+    if pl:
+        assert rest.pop(0) == "plugins"
+
+    assert values[3][:6] == [
+        "",
+        consumer["custom_id"],
+        datetime.fromtimestamp(consumer["created_at"], tz=timezone.utc).isoformat(" "),
+        consumer["id"],
+        "",
+        consumer["username"],
+    ]
+
+    incr = 0
+    if acls:
+        values[3][6 + incr] == "group1"
+        values[4][6 + incr] == "group2"
+        incr += 1
+    if ba:
+        values[3][6 + incr] == "username:xxx"
+        incr += 1
+    if ka:
+        values[3][6 + incr] == "key-abcdefg"
+        values[4][6 + incr] == "key-hijklmn"
+        incr += 1
+    if pl:
+        values[3][6 + incr] == "request-limit:"
+        values[4][6 + incr] == "{"
+        incr += 1
