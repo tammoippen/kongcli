@@ -151,7 +151,7 @@ def retrieve(
     parse_datetimes(user)
 
     if acls:
-        user["acls"] = "\n".join(consumers.groups(session, id_username))
+        user["acls"] = "\n".join(sorted(consumers.groups(session, id_username)))
     if basic_auths:
         user["basic_auth"] = "\n".join(
             f'{ba["id"]}: {ba["username"]}:xxx'
@@ -225,11 +225,11 @@ def delete(ctx: click.Context, id_username: str) -> None:
 @click.command()
 @click.option(
     "--username",
-    help="The unique username of the consumer. You must proviod either this field or custom_id.",
+    help="The unique username of the consumer. You must provide either this field or custom_id.",
 )
 @click.option(
     "--custom_id",
-    help="The unique custom_id of the consaumer. You must proviod either this field or username.",
+    help="The unique custom_id of the consumer. You must provide either this field or username.",
 )
 @click.argument("id_username")
 @click.pass_context
@@ -348,7 +348,7 @@ def update_key_auth(
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
 
-@consumers_cli.group(name="basic-auth")
+@consumers_cli.group()
 def basic_auth() -> None:
     """Manage basic auths of Consumer Objects."""
     pass
