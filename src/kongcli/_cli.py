@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 import click
 from loguru import logger
+import pkg_resources
 from tabulate import tabulate_formats
 
 from ._consumers import consumers_cli, list_consumers
@@ -51,12 +52,10 @@ def cli(
 
     Some options can also be configured via environment variables:
 
+    \b
     --url KONG_BASE
-
     --apikey KONG_APIKEY
-
     --basic KONG_BASIC_USER
-
     --passwd KONG_BASIC_PASSWD
     """
     ctx.ensure_object(dict)
@@ -104,6 +103,12 @@ def info(ctx: click.Context) -> None:
     print(json.dumps(info, indent=2))
 
 
+@cli.command()
+def version() -> None:
+    """Show version of kongcli."""
+    print(f"kongcli v{pkg_resources.get_distribution('kongcli').version}")
+
+
 @cli.group(name="list", chain=True)
 @click.pass_context
 def list_cmd(ctx: click.Context) -> None:
@@ -115,7 +120,3 @@ list_cmd.add_command(list_consumers, name="consumers")
 list_cmd.add_command(list_global_plugins, name="global-plugins")
 list_cmd.add_command(list_routes, name="routes")
 list_cmd.add_command(list_services, name="services")
-
-
-if __name__ == "__main__":
-    cli(obj={})
