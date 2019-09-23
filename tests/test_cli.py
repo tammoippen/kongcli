@@ -70,8 +70,11 @@ def test_info_simple_auth(invoke):
 
 def test_list_cmd(invoke, clean_kong):
     result = invoke(["--font", "cyberlarge", "list", "consumers"])
-    assert result.output == """\
+    assert (
+        result.output
+        == """\
  _______  _____  __   _ _______ _     _ _______ _______  ______ _______
  |       |     | | \  | |______ |     | |  |  | |______ |_____/ |______
  |_____  |_____| |  \_| ______| |_____| |  |  | |______ |    \_ ______|
                                                                        \n\n\n"""
+    )

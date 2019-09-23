@@ -100,13 +100,13 @@ cli.add_command(raw)
 def info(ctx: click.Context) -> None:
     """Show information on the kong instance."""
     info = get("information", lambda: information(ctx.obj["session"]))
-    print(json.dumps(info, indent=2))
+    click.echo(json.dumps(info, indent=2))
 
 
 @cli.command()
 def version() -> None:
     """Show version of kongcli."""
-    print(f"kongcli v{pkg_resources.get_distribution('kongcli').version}")
+    click.echo(f"kongcli v{pkg_resources.get_distribution('kongcli').version}")
 
 
 @cli.group(name="list", chain=True)

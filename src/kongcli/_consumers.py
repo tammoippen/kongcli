@@ -1,5 +1,4 @@
 import json
-import sys
 from typing import Optional, Tuple
 from uuid import UUID
 
@@ -83,7 +82,7 @@ def list_consumers(ctx: click.Context, full_keys: bool, full_plugins: bool) -> N
         data.append(cdata)
 
     data.sort(key=lambda d: (len(d["custom_id"]), d["username"]))
-    print(tabulate(data, headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate(data, headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -101,9 +100,9 @@ def create(
     You must select either `custom_id` or `username` or both.
     """
     if not (username or custom_id):
-        print(
+        click.echo(
             "You must set either `--username` or `--custom_id` with the request.",
-            file=sys.stderr,
+            err=True,
         )
         raise click.Abort()
 
@@ -112,7 +111,7 @@ def create(
 
     user = general.add("consumers", session, username=username, custom_id=custom_id)
     parse_datetimes(user)
-    print(tabulate([user], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -163,7 +162,7 @@ def retrieve(
             f"{json.dumps(plugin, indent=2)}"
             for plugin in consumers.plugins(session, id_username)
         )
-    print(tabulate([user], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -215,7 +214,7 @@ def delete(ctx: click.Context, id_username: str) -> None:
     session = ctx.obj["session"]
 
     general.delete("consumers", session, id_username)
-    print(f"Deleted consumer `{id_username}`!")
+    click.echo(f"Deleted consumer `{id_username}`!")
 
 
 @click.command()
@@ -251,7 +250,7 @@ def update(
     assert payload, "At least one of `--username` or `--custom_id` has to be set."
 
     user = general.update("consumers", session, id_username, **payload)
-    print(tabulate([user], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
 @click.group(name="consumers")
@@ -291,7 +290,7 @@ def list_key_auths(ctx: click.Context, id_username: str) -> None:
     key_auths = consumers.key_auths(session, id_username)
     for key in key_auths:
         parse_datetimes(key)
-    print(tabulate(key_auths, headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate(key_auths, headers="keys", tablefmt=tablefmt))
 
 
 @key_auth.command(name="add")
@@ -312,7 +311,7 @@ def add_key_auth(ctx: click.Context, id_username: str, key: Optional[str]) -> No
 
     key_auth = consumers.add_key_auth(session, id_username, key)
     parse_datetimes(key_auth)
-    print(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
 
 @key_auth.command(name="delete")
@@ -324,7 +323,7 @@ def delete_key_auth(ctx: click.Context, id_username: str, key_id: UUID) -> None:
     session = ctx.obj["session"]
 
     consumers.delete_key_auth(session, id_username, key_id)
-    print(f"Deleted key `{key_id}` of consumer `{id_username}`!")
+    click.echo(f"Deleted key `{key_id}` of consumer `{id_username}`!")
 
 
 @key_auth.command(name="update")
@@ -341,7 +340,7 @@ def update_key_auth(
 
     key_auth = consumers.update_key_auth(session, id_username, key_id, new_key)
     parse_datetimes(key_auth)
-    print(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
 
 @consumers_cli.group(name="basic-auth")
@@ -361,7 +360,7 @@ def list_basic_auths(ctx: click.Context, id_username: str) -> None:
     basic_auths = consumers.basic_auths(session, id_username)
     for key in basic_auths:
         parse_datetimes(key)
-    print(tabulate(basic_auths, headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate(basic_auths, headers="keys", tablefmt=tablefmt))
 
 
 @basic_auth.command(name="add")
@@ -380,7 +379,7 @@ def add_basic_auth(
 
     basic_auth = consumers.add_basic_auth(session, id_username, username, password)
     parse_datetimes(basic_auth)
-    print(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
 
 
 @basic_auth.command(name="delete")
@@ -394,7 +393,7 @@ def delete_basic_auth(
     session = ctx.obj["session"]
 
     consumers.delete_basic_auth(session, id_username, basic_auth_id)
-    print(f"Deleted credentials `{basic_auth_id}` of consumer `{id_username}`!")
+    click.echo(f"Deleted credentials `{basic_auth_id}` of consumer `{id_username}`!")
 
 
 @basic_auth.command(name="update")
@@ -418,11 +417,11 @@ def update_basic_auth(
     tablefmt = ctx.obj["tablefmt"]
 
     if not (username or password):
-        print("At least one of username or password has to be set.")
+        click.echo("At least one of username or password has to be set.")
         raise click.Abort()
 
     basic_auth = consumers.update_basic_auth(
         session, id_username, basic_auth_id, username, password
     )
     parse_datetimes(basic_auth)
-    print(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))

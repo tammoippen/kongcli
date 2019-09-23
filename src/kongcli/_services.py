@@ -66,7 +66,7 @@ def list_services(ctx: click.Context, full_plugins: bool) -> None:
         sdata["plugins"] = "\n".join(sdata["plugins"])
         data.append(sdata)
 
-    print(
+    click.echo(
         tabulate(
             sorted(data, key=itemgetter("name")), headers="keys", tablefmt=tablefmt
         )
@@ -165,7 +165,7 @@ def add(
 
     service = general.add("services", session, **payload)
     parse_datetimes(service)
-    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([service], headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -187,7 +187,7 @@ def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> N
     parse_datetimes(service)
 
     print_figlet("Service", font=font, width=160)
-    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([service], headers="keys", tablefmt=tablefmt))
 
     if plugins:
         plugins_entities = general.get_assoziated(
@@ -196,7 +196,7 @@ def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> N
         for p in plugins_entities:
             parse_datetimes(p)
         print_figlet("* Plugins", font=font, width=160)
-        print(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
+        click.echo(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
     if routes:
         routes_entities = general.get_assoziated(
             "services", session, service["id"], "routes"
@@ -204,7 +204,7 @@ def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> N
         for r in routes_entities:
             parse_datetimes(r)
         print_figlet("* Routes", font=font, width=160)
-        print(tabulate(routes_entities, headers="keys", tablefmt=tablefmt))
+        click.echo(tabulate(routes_entities, headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -218,7 +218,7 @@ def delete(ctx: click.Context, id_name: str) -> None:
     session = ctx.obj["session"]
 
     general.delete("services", session, id_name)
-    print(f"Deleted service `{id_name}`!")
+    click.echo(f"Deleted service `{id_name}`!")
 
 
 @click.command()
@@ -316,7 +316,7 @@ def update(
 
     service = general.update("services", session, id_name, **payload)
     parse_datetimes(service)
-    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([service], headers="keys", tablefmt=tablefmt))
 
 
 @click.group(name="services")

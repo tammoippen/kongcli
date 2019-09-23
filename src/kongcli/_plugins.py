@@ -35,7 +35,7 @@ def list_global_plugins(ctx: click.Context) -> None:
             parse_datetimes(p)
             data.append(p)
 
-    print(
+    click.echo(
         tabulate(
             sorted(data, key=itemgetter("name")), headers="keys", tablefmt=tablefmt
         )
@@ -72,7 +72,7 @@ def list_plugins(ctx: click.Context) -> None:
                     p["consumer_custom_id"] = c["custom_id"]
                     break
 
-    print(
+    click.echo(
         tabulate(
             sorted(plugins, key=itemgetter("name")), headers="keys", tablefmt=tablefmt
         )
@@ -85,7 +85,9 @@ def list_plugins(ctx: click.Context) -> None:
 def schema(ctx: click.Context, plugin_name: str) -> None:
     """Get the schema of a certain plugin."""
     session = ctx.obj["session"]
-    print(json.dumps(plugins.schema(session, plugin_name), indent=2, sort_keys=True))
+    click.echo(
+        json.dumps(plugins.schema(session, plugin_name), indent=2, sort_keys=True)
+    )
 
 
 def _enable_basic_auth_on_resource(resource: str) -> click.Command:
@@ -143,7 +145,7 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+        click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_basic_auth
 
@@ -205,12 +207,13 @@ def update_basic_auth(
         payload["config"]["route"] = str(route)
 
     if not payload:
-        print(f"No changes specified for `{plugin_id}`")
-        return
-    payload["name"] = "basic-auth"
-    plugin = general.update("plugins", session, str(plugin_id), **payload)
+        logger.info(f"No changes specified for `{plugin_id}`")
+        plugin = general.retrieve("plugins", session, plugin_id)
+    else:
+        payload["name"] = "basic-auth"
+        plugin = general.update("plugins", session, str(plugin_id), **payload)
     parse_datetimes(plugin)
-    print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
 
 def _enable_key_auth_on_resource(resource: str) -> click.Command:
@@ -294,7 +297,7 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+        click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_key_auth
 
@@ -386,7 +389,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        print(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+        click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_acl
 
@@ -410,7 +413,7 @@ def delete(ctx: click.Context, uuid_id: UUID) -> None:
     session = ctx.obj["session"]
 
     general.delete("plugins", session, str(uuid_id))
-    print(f"Deleted plugin `{uuid_id}`!")
+    click.echo(f"Deleted plugin `{uuid_id}`!")
 
 
 @click.group(name="plugins")

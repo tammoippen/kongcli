@@ -72,7 +72,7 @@ def list_routes(ctx: click.Context, full_plugins: bool) -> None:
         rdata["plugins"] = "\n".join(rdata["plugins"])
         data.append(rdata)
 
-    print(
+    click.echo(
         tabulate(
             sorted(data, key=itemgetter("service_name")),
             headers="keys",
@@ -167,7 +167,7 @@ def add(
 
     route = general.add("routes", session, **payload)
     parse_datetimes(route)
-    print(tabulate([route], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([route], headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -188,9 +188,9 @@ def retrieve(ctx: click.Context, uuid_id: str, plugins: bool) -> None:
     parse_datetimes(service)
 
     print_figlet("Route", font=font, width=160)
-    print(tabulate([route], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([route], headers="keys", tablefmt=tablefmt))
     print_figlet("* Service", font=font, width=160)
-    print(tabulate([service], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([service], headers="keys", tablefmt=tablefmt))
 
     if plugins:
         plugins_entities = general.get_assoziated(
@@ -199,7 +199,7 @@ def retrieve(ctx: click.Context, uuid_id: str, plugins: bool) -> None:
         for p in plugins_entities:
             parse_datetimes(p)
         print_figlet("* Plugins", font=font, width=160)
-        print(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
+        click.echo(tabulate(plugins_entities, headers="keys", tablefmt=tablefmt))
 
 
 @click.command()
@@ -213,7 +213,7 @@ def delete(ctx: click.Context, uuid_id: str) -> None:
     session = ctx.obj["session"]
 
     general.delete("routes", session, uuid_id)
-    print(f"Deleted route `{uuid_id}`!")
+    click.echo(f"Deleted route `{uuid_id}`!")
 
 
 @click.command()
@@ -301,7 +301,7 @@ def update(
 
     route = general.update("routes", session, uuid_id, **payload)
     parse_datetimes(route)
-    print(tabulate([route], headers="keys", tablefmt=tablefmt))
+    click.echo(tabulate([route], headers="keys", tablefmt=tablefmt))
 
 
 @click.group(name="routes")
