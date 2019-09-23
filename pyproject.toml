@@ -55,3 +55,7 @@ pytest-flake8 = "^1.0"
 pytest-mock = "^1.10"
 pytest-pythonpath = "^0.7.3"
 pytest-randomly = "^3.0"
+
+[tool.black]
+target-version = ["py36"]
+include = '\.pyi?$'
