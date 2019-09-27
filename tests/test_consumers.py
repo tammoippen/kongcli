@@ -479,7 +479,7 @@ def test_key_auth_lists_none(invoke, sample):
 def test_key_auth_lists_some(invoke, sample, session):
     service, route, consumer = sample
     keys = []
-    for i_ in range(5):
+    for _i in range(5):
         keys.append(consumers.add_key_auth(session, consumer["id"]))
     result = invoke(
         [
@@ -509,9 +509,9 @@ def test_key_auth_lists_some(invoke, sample, session):
         values = [v.strip() for v in line.split("|")][1:-1]
         assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
         assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
-        id_ = values[2].strip()
+        id_ = values[2]
         key = next(k for k in keys if k["id"] == id_)
-        assert key["key"] == values[3].strip()
+        assert key["key"] == values[3]
 
 
 def test_key_auth_add(invoke, sample, session):
@@ -543,10 +543,10 @@ def test_key_auth_add(invoke, sample, session):
     values = [v.strip() for v in lines[3].split("|")][1:-1]
     assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
     assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
-    id_ = values[2].strip()
+    id_ = values[2]
     keys = consumers.key_auths(session, consumer["id"])
     key = next(k for k in keys if k["id"] == id_)
-    assert values[3].strip() == key["key"]
+    assert values[3] == key["key"]
 
 
 def test_key_auth_delete(invoke, sample, session):
@@ -604,8 +604,186 @@ def test_key_auth_update(invoke, sample, session):
     values = [v.strip() for v in lines[3].split("|")][1:-1]
     assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
     assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
-    id_ = values[2].strip()
+    id_ = values[2]
     keys = consumers.key_auths(session, consumer["id"])
     key = next(k for k in keys if k["id"] == id_)
-    assert values[3].strip() == key["key"]
-    assert values[3].strip() == "key-12345"
+    assert values[3] == key["key"]
+    assert values[3] == "key-12345"
+
+
+def test_basic_auth_lists_none(invoke, sample):
+    service, route, consumer = sample
+    result = invoke(["consumers", "basic-auth", "list", consumer["id"]])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == ""
+
+
+def test_basic_auth_lists_some(invoke, sample, session):
+    service, route, consumer = sample
+    bas = []
+    for i in range(5):
+        bas.append(consumers.add_basic_auth(session, consumer["id"], f"user{i}", "passwd"))
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "basic-auth",
+            "list",
+            consumer["id"],
+        ]
+    )
+
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 10
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "consumer",
+        "created_at",
+        "id",
+        "password",
+        "username",
+        "",
+    ]
+    for line in lines[3:8]:
+        values = [v.strip() for v in line.split("|")][1:-1]
+        assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
+        assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+        id_ = values[2]
+        ba = next(k for k in bas if k["id"] == id_)
+        assert ba["password"] == values[3]
+        assert ba["username"] == values[4]
+
+
+def test_basic_auth_add(invoke, sample, session):
+    service, route, consumer = sample
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "basic-auth",
+            "add",
+            consumer["id"],
+            "--username", "user",
+            "--password", "passwd",
+        ]
+    )
+
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 6
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "consumer",
+        "created_at",
+        "id",
+        "password",
+        "username",
+        "",
+    ]
+    values = [v.strip() for v in lines[3].split("|")][1:-1]
+    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
+    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    id_ = values[2]
+    bas = consumers.basic_auths(session, consumer["id"])
+    ba = next(k for k in bas if k["id"] == id_)
+    assert ba["password"] == values[3]
+    assert ba["username"] == values[4]
+
+
+def test_basic_auth_delete(invoke, sample, session):
+    service, route, consumer = sample
+    ba = consumers.add_basic_auth(session, consumer["id"], "user", "passwd")
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "basic-auth",
+            "delete",
+            consumer["id"],
+            ba["id"],
+        ]
+    )
+
+    assert result.exit_code == 0
+    assert result.output == f"Deleted credentials `{ba['id']}` of consumer `{consumer['id']}`!\n"
+    bas = consumers.basic_auths(session, consumer["id"])
+    assert bas == []
+
+
+@pytest.mark.parametrize(
+    "username,passwd", [("xyz", "4321"), (None, "4321"), ("xyz", None)]
+)
+def test_basic_auth_update(invoke, sample, session, username, passwd):
+    service, route, consumer = sample
+    ba = consumers.add_basic_auth(session, consumer["id"], "user", "passwd")
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "basic-auth",
+            "update",
+            consumer["id"],
+            ba["id"],
+            "--username", username,
+            "--password", passwd,
+        ]
+    )
+
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 6
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "consumer",
+        "created_at",
+        "id",
+        "password",
+        "username",
+        "",
+    ]
+    values = [v.strip() for v in lines[3].split("|")][1:-1]
+    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
+    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    id_ = values[2]
+    bas = consumers.basic_auths(session, consumer["id"])
+    ba = next(k for k in bas if k["id"] == id_)
+    assert ba["password"] == values[3]
+    assert ba["password"] == passwd or "passwd"
+    assert ba["username"] == values[4]
+    assert ba["username"] == username or "user"
+
+
+def test_basic_auth_update_no_data(invoke, sample, session):
+    service, route, consumer = sample
+    ba = consumers.add_basic_auth(session, consumer["id"], "user", "passwd")
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "basic-auth",
+            "update",
+            consumer["id"],
+            ba["id"],
+        ]
+    )
+
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert result.stderr == "You must set either `--username` or `--password` with the request.\nAborted!\n"

@@ -372,6 +372,7 @@ def list_basic_auths(ctx: click.Context, id_username: str) -> None:
     tablefmt = ctx.obj["tablefmt"]
 
     basic_auths = consumers.basic_auths(session, id_username)
+    basic_auths = sort_dict(basic_auths)
     for key in basic_auths:
         parse_datetimes(key)
     click.echo(tabulate(basic_auths, headers="keys", tablefmt=tablefmt))
@@ -392,6 +393,7 @@ def add_basic_auth(
     tablefmt = ctx.obj["tablefmt"]
 
     basic_auth = consumers.add_basic_auth(session, id_username, username, password)
+    basic_auth = sort_dict(basic_auth)
     parse_datetimes(basic_auth)
     click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
 
@@ -431,11 +433,15 @@ def update_basic_auth(
     tablefmt = ctx.obj["tablefmt"]
 
     if not (username or password):
-        click.echo("At least one of username or password has to be set.")
+        click.echo(
+            "You must set either `--username` or `--password` with the request.",
+            err=True,
+        )
         raise click.Abort()
 
     basic_auth = consumers.update_basic_auth(
         session, id_username, basic_auth_id, username, password
     )
+    basic_auth = sort_dict(basic_auth)
     parse_datetimes(basic_auth)
     click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
