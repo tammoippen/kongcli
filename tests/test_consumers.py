@@ -567,7 +567,9 @@ def test_key_auth_delete(invoke, sample, session):
     )
 
     assert result.exit_code == 0
-    assert result.output == f"Deleted key `{key['id']}` of consumer `{consumer['id']}`!\n"
+    assert (
+        result.output == f"Deleted key `{key['id']}` of consumer `{consumer['id']}`!\n"
+    )
     keys = consumers.key_auths(session, consumer["id"])
     assert keys == []
 
@@ -623,7 +625,9 @@ def test_basic_auth_lists_some(invoke, sample, session):
     service, route, consumer = sample
     bas = []
     for i in range(5):
-        bas.append(consumers.add_basic_auth(session, consumer["id"], f"user{i}", "passwd"))
+        bas.append(
+            consumers.add_basic_auth(session, consumer["id"], f"user{i}", "passwd")
+        )
     result = invoke(
         [
             "--font",
@@ -671,8 +675,10 @@ def test_basic_auth_add(invoke, sample, session):
             "basic-auth",
             "add",
             consumer["id"],
-            "--username", "user",
-            "--password", "passwd",
+            "--username",
+            "user",
+            "--password",
+            "passwd",
         ]
     )
 
@@ -716,7 +722,10 @@ def test_basic_auth_delete(invoke, sample, session):
     )
 
     assert result.exit_code == 0
-    assert result.output == f"Deleted credentials `{ba['id']}` of consumer `{consumer['id']}`!\n"
+    assert (
+        result.output
+        == f"Deleted credentials `{ba['id']}` of consumer `{consumer['id']}`!\n"
+    )
     bas = consumers.basic_auths(session, consumer["id"])
     assert bas == []
 
@@ -738,8 +747,10 @@ def test_basic_auth_update(invoke, sample, session, username, passwd):
             "update",
             consumer["id"],
             ba["id"],
-            "--username", username,
-            "--password", passwd,
+            "--username",
+            username,
+            "--password",
+            passwd,
         ]
     )
 
@@ -786,4 +797,7 @@ def test_basic_auth_update_no_data(invoke, sample, session):
 
     assert result.exit_code == 1
     assert isinstance(result.exception, SystemExit)
-    assert result.stderr == "You must set either `--username` or `--password` with the request.\nAborted!\n"
+    assert (
+        result.stderr
+        == "You must set either `--username` or `--password` with the request.\nAborted!\n"
+    )
