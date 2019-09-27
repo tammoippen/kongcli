@@ -53,13 +53,15 @@ def test_list_single_empty(invoke, sample):
 
 
 @pytest.mark.parametrize("full_keys", [[], ["--full-keys"]])
-def test_list_single_filled(invoke, sample, session, full_keys):
-    service, route, consumer = sample
-    consumers.add_group(session, consumer["id"], "group2")
-    consumers.add_group(session, consumer["id"], "group1")
-    consumers.add_basic_auth(session, consumer["id"], "username", "passwd")
-    consumers.add_key_auth(session, consumer["id"], "key-abcdefg")
-    consumers.add_key_auth(session, consumer["id"], "key-hijklmn")
+def test_list_two_filled(invoke, sample, session, full_keys):
+    service, route, consumer1 = sample
+    consumer2 = general.add("consumers", session, username="foobar2", custom_id="4321")
+    for idx, consumer in enumerate((consumer1, consumer2)):
+        consumers.add_group(session, consumer["id"], "group2")
+        consumers.add_group(session, consumer["id"], "group1")
+        consumers.add_basic_auth(session, consumer["id"], f"username{idx}", "passwd")
+        consumers.add_key_auth(session, consumer["id"], f"key-abcdefg{idx}")
+        consumers.add_key_auth(session, consumer["id"], f"key-hijklmn{idx}")
 
     result = invoke(
         ["--font", "cyberlarge", "--tablefmt", "psql", "consumers", "list"] + full_keys
@@ -67,7 +69,7 @@ def test_list_single_filled(invoke, sample, session, full_keys):
 
     assert result.exit_code == 0
     lines = result.output.split("\n")
-    assert len(lines) == 12
+    assert len(lines) == 14
     assert [v.strip() for v in lines[6].split("|")] == [
         "",
         "id",
@@ -79,36 +81,39 @@ def test_list_single_filled(invoke, sample, session, full_keys):
         "key_auth",
         "",
     ]
-    assert [v.strip() for v in lines[8].split("|")] == [
-        "",
-        consumer["id"],
-        consumer["custom_id"],
-        consumer["username"],
-        "group1",
-        "",
-        "username:xxx",
-        "key-abcdefg" if full_keys else "key-ab...",
-        "",
-    ]
-    assert [v.strip() for v in lines[9].split("|")] == [
-        "",
-        "",
-        "",
-        "",
-        "group2",
-        "",
-        "",
-        "key-hijklmn" if full_keys else "key-hi...",
-        "",
-    ]
+    for idx, consumer in enumerate((consumer1, consumer2)):
+        assert [v.strip() for v in lines[8 + idx * 2].split("|")] == [
+            "",
+            consumer["id"],
+            consumer["custom_id"],
+            consumer["username"],
+            "group1",
+            "",
+            f"username{idx}:xxx",
+            f"key-abcdefg{idx}" if full_keys else "key-ab...",
+            "",
+        ]
+        assert [v.strip() for v in lines[9 + idx * 2].split("|")] == [
+            "",
+            "",
+            "",
+            "",
+            "group2",
+            "",
+            "",
+            f"key-hijklmn{idx}" if full_keys else "key-hi...",
+            "",
+        ]
 
 
 @pytest.mark.parametrize("full_plugins", [[], ["--full-plugins"]])
-def test_list_single_plugins(invoke, sample, session, full_plugins):
-    service, route, consumer = sample
-    plugins.enable_on(
-        session, "consumers", consumer["id"], "rate-limiting", config={"minute": 20}
-    )
+def test_list_two_plugins(invoke, sample, session, full_plugins):
+    service, route, consumer1 = sample
+    consumer2 = general.add("consumers", session, username="foobar2", custom_id="4321")
+    for consumer in (consumer1, consumer2):
+        plugins.enable_on(
+            session, "consumers", consumer["id"], "rate-limiting", config={"minute": 20}
+        )
     plugins.enable_on(
         session, "routes", route["id"], "rate-limiting", config={"minute": 25}
     )
@@ -120,7 +125,7 @@ def test_list_single_plugins(invoke, sample, session, full_plugins):
 
     assert result.exit_code == 0
     lines = result.output.split("\n")
-    assert len(lines) == 28 if full_plugins else 11
+    assert len(lines) == 46 if full_plugins else 11
     assert [v.strip() for v in lines[6].split("|")] == [
         "",
         "id",
@@ -134,9 +139,9 @@ def test_list_single_plugins(invoke, sample, session, full_plugins):
     ]
     assert [v.strip() for v in lines[8].split("|")] == [
         "",
-        consumer["id"],
-        consumer["custom_id"],
-        consumer["username"],
+        consumer1["id"],
+        consumer1["custom_id"],
+        consumer1["username"],
         "",
         "rate-limiting:" if full_plugins else "rate-limiting",
         "",
@@ -148,6 +153,34 @@ def test_list_single_plugins(invoke, sample, session, full_plugins):
         assert rest[0] == "{"
         assert rest[6] == '"minute": 20,'
         assert rest[-1] == "}"
+
+        assert [v.strip() for v in lines[26].split("|")] == [
+            "",
+            consumer2["id"],
+            consumer2["custom_id"],
+            consumer2["username"],
+            "",
+            "rate-limiting:",
+            "",
+            "",
+            "",
+        ]
+        rest = [line.split("|")[5].strip() for line in lines[27:44]]
+        assert rest[0] == "{"
+        assert rest[6] == '"minute": 20,'
+        assert rest[-1] == "}"
+    else:
+        assert [v.strip() for v in lines[9].split("|")] == [
+            "",
+            consumer2["id"],
+            consumer2["custom_id"],
+            consumer2["username"],
+            "",
+            "rate-limiting",
+            "",
+            "",
+            "",
+        ]
 
 
 def test_create_no_required(invoke, clean_kong):
