@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import json
 from uuid import UUID
 
 import pytest
@@ -195,10 +196,21 @@ def test_update_empty(invoke, clean_kong, sample):
     service, route, consumer = sample
 
     result = invoke(
-        ["--font", "cyberlarge", "--tablefmt", "psql", "consumers", "update", consumer["id"]]
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "update",
+            consumer["id"],
+        ]
     )
     assert result.exit_code == 1
-    assert result.stderr == "You must set either `--username` or `--custom_id` with the request.\nAborted!\n"
+    assert (
+        result.stderr
+        == "You must set either `--username` or `--custom_id` with the request.\nAborted!\n"
+    )
     assert isinstance(result.exception, SystemExit)
 
 
@@ -213,7 +225,16 @@ def test_update(invoke, clean_kong, username, custom, sample):
     if custom:
         extra += ["--custom_id", custom]
     result = invoke(
-        ["--font", "cyberlarge", "--tablefmt", "psql", "consumers", "update", consumer["id"]] + extra
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "update",
+            consumer["id"],
+        ]
+        + extra
     )
     assert result.exit_code == 0
     lines = result.output.split("\n")
@@ -442,6 +463,149 @@ def test_delete(invoke, sample, session):
     assert result.output == f"Deleted consumer `{consumer['id']}`!\n"
 
     with pytest.raises(Exception) as e:
-        general.retrieve("consumers", session, consumer['id'])
+        general.retrieve("consumers", session, consumer["id"])
 
     assert str(e.value) == '404 Not Found: {"message":"Not found"}'
+
+
+def test_key_auth_lists_none(invoke, sample):
+    service, route, consumer = sample
+    result = invoke(["consumers", "key-auth", "list", consumer["id"]])
+
+    assert result.exit_code == 0
+    assert result.output.strip() == ""
+
+
+def test_key_auth_lists_some(invoke, sample, session):
+    service, route, consumer = sample
+    keys = []
+    for i_ in range(5):
+        keys.append(consumers.add_key_auth(session, consumer["id"]))
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "key-auth",
+            "list",
+            consumer["id"],
+        ]
+    )
+
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 10
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "consumer",
+        "created_at",
+        "id",
+        "key",
+        "",
+    ]
+    for line in lines[3:8]:
+        values = [v.strip() for v in line.split("|")][1:-1]
+        assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
+        assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+        id_ = values[2].strip()
+        key = next(k for k in keys if k["id"] == id_)
+        assert key["key"] == values[3].strip()
+
+
+def test_key_auth_add(invoke, sample, session):
+    service, route, consumer = sample
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "key-auth",
+            "add",
+            consumer["id"],
+        ]
+    )
+
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 6
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "consumer",
+        "created_at",
+        "id",
+        "key",
+        "",
+    ]
+    values = [v.strip() for v in lines[3].split("|")][1:-1]
+    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
+    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    id_ = values[2].strip()
+    keys = consumers.key_auths(session, consumer["id"])
+    key = next(k for k in keys if k["id"] == id_)
+    assert values[3].strip() == key["key"]
+
+
+def test_key_auth_delete(invoke, sample, session):
+    service, route, consumer = sample
+    key = consumers.add_key_auth(session, consumer["id"])
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "key-auth",
+            "delete",
+            consumer["id"],
+            key["id"],
+        ]
+    )
+
+    assert result.exit_code == 0
+    assert result.output == f"Deleted key `{key['id']}` of consumer `{consumer['id']}`!\n"
+    keys = consumers.key_auths(session, consumer["id"])
+    assert keys == []
+
+
+def test_key_auth_update(invoke, sample, session):
+    service, route, consumer = sample
+    key = consumers.add_key_auth(session, consumer["id"])
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "consumers",
+            "key-auth",
+            "update",
+            consumer["id"],
+            key["id"],
+            "key-12345",
+        ]
+    )
+
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 6
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "consumer",
+        "created_at",
+        "id",
+        "key",
+        "",
+    ]
+    values = [v.strip() for v in lines[3].split("|")][1:-1]
+    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
+    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    id_ = values[2].strip()
+    keys = consumers.key_auths(session, consumer["id"])
+    key = next(k for k in keys if k["id"] == id_)
+    assert values[3].strip() == key["key"]
+    assert values[3].strip() == "key-12345"

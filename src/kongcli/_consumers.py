@@ -299,6 +299,7 @@ def list_key_auths(ctx: click.Context, id_username: str) -> None:
     tablefmt = ctx.obj["tablefmt"]
 
     key_auths = consumers.key_auths(session, id_username)
+    key_auths = sort_dict(key_auths)
     for key in key_auths:
         parse_datetimes(key)
     click.echo(tabulate(key_auths, headers="keys", tablefmt=tablefmt))
@@ -321,6 +322,7 @@ def add_key_auth(ctx: click.Context, id_username: str, key: Optional[str]) -> No
     tablefmt = ctx.obj["tablefmt"]
 
     key_auth = consumers.add_key_auth(session, id_username, key)
+    key_auth = sort_dict(key_auth)
     parse_datetimes(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
@@ -350,6 +352,7 @@ def update_key_auth(
     tablefmt = ctx.obj["tablefmt"]
 
     key_auth = consumers.update_key_auth(session, id_username, key_id, new_key)
+    key_auth = sort_dict(key_auth)
     parse_datetimes(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
