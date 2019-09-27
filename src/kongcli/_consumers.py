@@ -252,9 +252,15 @@ def update(
     if custom_id:
         payload["custom_id"] = custom_id
 
-    assert payload, "At least one of `--username` or `--custom_id` has to be set."
+    if not payload:
+        click.echo(
+            "You must set either `--username` or `--custom_id` with the request.",
+            err=True,
+        )
+        raise click.Abort()
 
     user = general.update("consumers", session, id_username, **payload)
+    user = sort_dict(user)
     click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 

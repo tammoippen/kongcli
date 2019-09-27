@@ -191,6 +191,49 @@ def test_create(invoke, clean_kong, username, custom):
     assert values[5] == "" if username is None else username
 
 
+def test_update_empty(invoke, clean_kong, sample):
+    service, route, consumer = sample
+
+    result = invoke(
+        ["--font", "cyberlarge", "--tablefmt", "psql", "consumers", "update", consumer["id"]]
+    )
+    assert result.exit_code == 1
+    assert result.stderr == "You must set either `--username` or `--custom_id` with the request.\nAborted!\n"
+    assert isinstance(result.exception, SystemExit)
+
+
+@pytest.mark.parametrize(
+    "username,custom", [("xyz", "4321"), (None, "4321"), ("xyz", None)]
+)
+def test_update(invoke, clean_kong, username, custom, sample):
+    service, route, consumer = sample
+    extra = []
+    if username:
+        extra += ["--username", username]
+    if custom:
+        extra += ["--custom_id", custom]
+    result = invoke(
+        ["--font", "cyberlarge", "--tablefmt", "psql", "consumers", "update", consumer["id"]] + extra
+    )
+    assert result.exit_code == 0
+    lines = result.output.split("\n")
+    assert len(lines) == 6
+    assert [v.strip() for v in lines[1].split("|")] == [
+        "",
+        "created_at",
+        "custom_id",
+        "id",
+        "tags",
+        "username",
+        "",
+    ]
+    values = [v.strip() for v in lines[3].split("|")]
+    assert values[2] == consumer["custom_id"] if custom is None else custom
+    assert UUID(values[3])
+    assert values[4] == ""
+    assert values[5] == consumer["username"] if username is None else username
+
+
 @pytest.mark.parametrize("acls", (True, False))
 @pytest.mark.parametrize("ba", (True, False))
 @pytest.mark.parametrize("ka", (True, False))
