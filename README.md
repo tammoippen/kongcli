@@ -1,6 +1,6 @@
 # kongcli - cli for kong admin api
 
-*Note:* usable but still alpha quality - I will remove the alpha flag as soone as the coverage is above 90%.
+*Note:* usable but still alpha quality - I will remove the alpha flag as soon as the coverage is above 90%.
 
 This is a command line interface (cli) to configure the awesome [kong](https://konghq.com/), espacially using the [kong admin api](https://docs.konghq.com/1.3.x/admin-api/). There are alternatives like
 
