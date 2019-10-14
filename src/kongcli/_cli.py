@@ -53,10 +53,10 @@ def cli(
     Some options can also be configured via environment variables:
 
     \b
-    --url KONG_BASE
-    --apikey KONG_APIKEY
-    --basic KONG_BASIC_USER
-    --passwd KONG_BASIC_PASSWD
+    --url KONG_BASE            base url to the kong admin api
+    --apikey KONG_APIKEY       api key for the kong admin api
+    --basic KONG_BASIC_USER    basic auth username for kong admin api
+    --passwd KONG_BASIC_PASSWD basic auth password for the kong admin api
     """
     ctx.ensure_object(dict)
     logger.remove()

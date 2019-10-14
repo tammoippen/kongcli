@@ -45,7 +45,7 @@ def raw(
       -d name bar -d config.methods '["GET", "POST"]'
       # => {"name": "bar", "config": {"methods": ["GET", "POST"]}}
 
-    If first argument to `--data / -d` is the key. It is split by dots
+    The first argument to `--data / -d` is the key. It is split by dots
     and sub-dictionaries are created. The second argument is assumed to be
     valid JSON; if it cannot be parsed, we assume it is a string. Multiple
     usages of `--data / -d` will merge the dictionary.
