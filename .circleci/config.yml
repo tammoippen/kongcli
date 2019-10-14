@@ -25,8 +25,7 @@ commands:
             sudo docker run --rm -it \
                             --network container:kong \
                             -v $PWD:/app \
-                            --entrypoint /bin/sh \
-                            tammoippen/kongcli:latest /app/tests/test.sh
+                            tammoippen/kongcli:latest make ci
       - run:
           name: Stop kong.
           when: always
