@@ -24,6 +24,7 @@ commands:
           command: |
             sudo docker run --rm -it \
                             --network container:kong \
+                            --network container:kong_database \
                             -v $PWD:/app \
                             tammoippen/kongcli:latest make ci
       - run:

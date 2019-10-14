@@ -8,6 +8,7 @@ services:
 
   database:
     image: postgres:9.6
+    container_name: kong_database
     environment:
       - POSTGRES_USER=${KONG_PG_USER:-kong}
       - POSTGRES_DB=${KONG_PG_DATABASE:-kong}
