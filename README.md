@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/tammoippen/kongcli.svg?style=svg)](https://circleci.com/gh/tammoippen/kongcli)
+
 # kongcli - cli for kong admin api
 
 *Note:* usable but still alpha quality - I will remove the alpha flag as soon as the coverage is above 90%.
