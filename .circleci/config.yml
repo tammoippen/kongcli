@@ -54,8 +54,8 @@ commands:
 executors:
   default:
     working_directory: ~/app
-    machine:
-      docker_layer_caching: true
+    # machine:
+      # docker_layer_caching: true
 
 jobs:
   test_13:
