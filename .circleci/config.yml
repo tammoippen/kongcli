@@ -54,7 +54,8 @@ commands:
 executors:
   default:
     working_directory: ~/app
-    # machine:
+    machine:
+      image: circleci/classic:latest
       # docker_layer_caching: true
 
 jobs:
