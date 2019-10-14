@@ -335,7 +335,7 @@ def delete_key_auth(ctx: click.Context, id_username: str, key_id: UUID) -> None:
     """Delete a key."""
     session = ctx.obj["session"]
 
-    consumers.delete_key_auth(session, id_username, key_id)
+    consumers.delete_key_auth(session, id_username, str(key_id))
     click.echo(f"Deleted key `{key_id}` of consumer `{id_username}`!")
 
 
@@ -351,7 +351,7 @@ def update_key_auth(
     session = ctx.obj["session"]
     tablefmt = ctx.obj["tablefmt"]
 
-    key_auth = consumers.update_key_auth(session, id_username, key_id, new_key)
+    key_auth = consumers.update_key_auth(session, id_username, str(key_id), new_key)
     key_auth = sort_dict(key_auth)
     parse_datetimes(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
@@ -408,7 +408,7 @@ def delete_basic_auth(
     """Delete a basic-auth object."""
     session = ctx.obj["session"]
 
-    consumers.delete_basic_auth(session, id_username, basic_auth_id)
+    consumers.delete_basic_auth(session, id_username, str(basic_auth_id))
     click.echo(f"Deleted credentials `{basic_auth_id}` of consumer `{id_username}`!")
 
 
@@ -440,7 +440,7 @@ def update_basic_auth(
         raise click.Abort()
 
     basic_auth = consumers.update_basic_auth(
-        session, id_username, basic_auth_id, username, password
+        session, id_username, str(basic_auth_id), username, password
     )
     basic_auth = sort_dict(basic_auth)
     parse_datetimes(basic_auth)

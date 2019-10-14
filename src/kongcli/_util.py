@@ -69,5 +69,5 @@ def parse_datetimes(obj: Dict[str, Any]) -> None:
             )
 
 
-def sort_dict(obj: Dict[str, Any]) -> Dict[str, Any]:
+def sort_dict(obj: Any) -> Any:
     return json.loads(json.dumps(obj, sort_keys=True))

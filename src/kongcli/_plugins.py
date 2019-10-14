@@ -208,7 +208,7 @@ def update_basic_auth(
 
     if not payload:
         logger.info(f"No changes specified for `{plugin_id}`")
-        plugin = general.retrieve("plugins", session, plugin_id)
+        plugin = general.retrieve("plugins", session, str(plugin_id))
     else:
         payload["name"] = "basic-auth"
         plugin = general.update("plugins", session, str(plugin_id), **payload)
