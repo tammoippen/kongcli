@@ -12,6 +12,7 @@ from ._plugins import (
     enable_acl_routes,
     enable_basic_auth_routes,
     enable_key_auth_routes,
+    enable_rate_limiting_routes,
 )
 from ._util import get, parse_datetimes
 from .kong import general
@@ -329,3 +330,4 @@ routes_cli.add_command(list_routes, name="list")
 routes_cli.add_command(enable_basic_auth_routes, name="enable-basic-auth")
 routes_cli.add_command(enable_key_auth_routes, name="enable-key-auth")
 routes_cli.add_command(enable_acl_routes, name="enable-key-auth")
+routes_cli.add_command(enable_rate_limiting_routes, name="enable-rate-limiting")

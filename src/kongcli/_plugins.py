@@ -399,8 +399,198 @@ enable_acl_services = _enable_acl_on_resource("services")
 enable_acl_global = _enable_acl_on_resource("global")
 # TODO update ACL
 
-# TODO enable rate-limit
+
+def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
+    assert resource in ("services", "routes", "consumers", "global")
+
+    @click.command(name=f"enable-rate-limiting-on-{resource}")
+    @click.option(
+        "--enabled",
+        type=bool,
+        default=True,
+        help="Whether this plugin will be applied.",
+    )
+    @click.option(
+        "--second",
+        type=click.INT,
+        help="The amount of HTTP requests the developer can make per second. At least one limit must exist.",
+    )
+    @click.option(
+        "--minute",
+        type=click.INT,
+        help="The amount of HTTP requests the developer can make per minute. At least one limit must exist.",
+    )
+    @click.option(
+        "--hour",
+        type=click.INT,
+        help="The amount of HTTP requests the developer can make per hour. At least one limit must exist.",
+    )
+    @click.option(
+        "--day",
+        type=click.INT,
+        help="The amount of HTTP requests the developer can make per day. At least one limit must exist.",
+    )
+    @click.option(
+        "--month",
+        type=click.INT,
+        help="The amount of HTTP requests the developer can make per month. At least one limit must exist.",
+    )
+    @click.option(
+        "--year",
+        type=click.INT,
+        help="The amount of HTTP requests the developer can make per year. At least one limit must exist.",
+    )
+    @click.option(
+        "--limit_by",
+        type=click.Choice(["consumer", "credential", "ip"]),
+        help="The entity that will be used when aggregating the limits: consumer, credential, ip. If the consumer or the credential cannot be determined, the system will always fallback to ip.",
+        default="consumer",
+    )
+    @click.option(
+        "--policy",
+        type=click.Choice(["local", "cluster", "redis"]),
+        default="cluster",
+        help="The rate-limiting policies to use for retrieving and incrementing the limits. Available values are local (counters will be stored locally in-memory on the node), cluster (counters are stored in the datastore and shared across the nodes) and redis (counters are stored on a Redis server and will be shared across the nodes). In case of DB-less mode, at least one of local or redis must be specified. Please refer Implementation Considerations for details on which policy should be used.",
+    )
+    @click.option(
+        "--fault_tolerant",
+        type=bool,
+        default=True,
+        help="A boolean value that determines if the requests should be proxied even if Kong has troubles connecting a third-party datastore. If true requests will be proxied anyways effectively disabling the rate-limiting function until the datastore is working again. If false then the clients will see 500 errors.",
+    )
+    @click.option(
+        "--hide_client_headers",
+        type=bool,
+        default=False,
+        help="Optionally hide informative response headers.",
+    )
+    @click.option(
+        "--redis_host",
+        type=str,
+        help="When using the redis policy, this property specifies the address to the Redis server.",
+    )
+    @click.option(
+        "--redis_port",
+        type=int,
+        help="When using the redis policy, this property specifies the port of the Redis server.",
+        default=6379,
+    )
+    @click.option(
+        "--redis_password",
+        type=str,
+        help="When using the redis policy, this property specifies the password to connect to the Redis server.",
+    )
+    @click.option(
+        "--redis_timeout",
+        type=int,
+        help="When using the redis policy, this property specifies the timeout in milliseconds of any command submitted to the Redis server.",
+        default=2000,
+    )
+    @click.option(
+        "--redis_database",
+        type=int,
+        help="When using the redis policy, this property specifies Redis database to use.",
+        default=0,
+    )
+    @click.argument("resource_id", required=resource != "global")
+    @click.pass_context
+    def enable_acl(
+        ctx: click.Context,
+        resource_id: str,
+        enabled: bool,
+        second: Optional[int],
+        minute: Optional[int],
+        hour: Optional[int],
+        day: Optional[int],
+        month: Optional[int],
+        year: Optional[int],
+        limit_by: str,
+        policy: str,
+        fault_tolerant: bool,
+        hide_client_headers: bool,
+        redis_host: Optional[str],
+        redis_port: int,
+        redis_password: Optional[str],
+        redis_timeout: int,
+        redis_database: int,
+    ) -> None:
+        """Enable the rate-limiting plugin.
+
+        Rate limit how many HTTP requests a developer can make in a given period of
+        seconds, minutes, hours, days, months or years. If the underlying Service/Route
+        has no authentication layer, the Client IP address will be used, otherwise the
+        Consumer will be used if an authentication plugin has been configured.
+
+        A plugin which is not associated to any Service, Route or Consumer is considered
+        "global", and will be run on every request.
+        """
+        session = ctx.obj["session"]
+        tablefmt = ctx.obj["tablefmt"]
+
+        payload: Dict[str, Any] = {
+            "enabled": enabled,
+            "config": {
+                "hide_client_headers": hide_client_headers,
+                "fault_tolerant": fault_tolerant,
+                "limit_by": limit_by,
+                "policy": policy,
+            },
+        }
+
+        if not (second or minute or hour or day or month or year):
+            click.echo("At least one limit must exist.", err=True)
+            raise click.Abort()
+
+        if second:
+            payload["config"]["second"] = second
+        if minute:
+            payload["config"]["minute"] = minute
+        if hour:
+            payload["config"]["hour"] = hour
+        if day:
+            payload["config"]["day"] = day
+        if month:
+            payload["config"]["month"] = month
+        if year:
+            payload["config"]["year"] = year
+
+        if policy == "redis":
+            if redis_host is None:
+                click.echo("Provide the configuration for redis.", err=True)
+                raise click.Abort()
+            payload["config"].update(
+                {
+                    "redis_host": redis_host,
+                    "redis_port": redis_port,
+                    "redis_timeout": redis_timeout,
+                    "redis_database": redis_database,
+                }
+            )
+            if redis_password is not None:
+                payload["config"]["redis_password"] = redis_password
+
+        if resource != "global":
+            plugin = plugins.enable_on(
+                session, resource, resource_id, "rate-limiting", **payload
+            )
+        else:
+            payload["name"] = "rate-limiting"
+            plugin = general.add("plugins", session, **payload)
+
+        parse_datetimes(plugin)
+        plugin['config'] = json.dumps(plugin['config'], indent=2, sort_keys=True)
+        click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+
+    return enable_acl
+
+
+enable_rate_limiting_routes = _enable_rate_limiting_on_resource("routes")
+enable_rate_limiting_services = _enable_rate_limiting_on_resource("services")
+enable_rate_limiting_consumers = _enable_rate_limiting_on_resource("consumers")
+enable_rate_limiting_global = _enable_rate_limiting_on_resource("global")
 # TODO update rate-limit
+
+
 # TODO enable Request Size Limiting
 # TODO update Request Size Limiting
 
@@ -461,4 +651,5 @@ plugins_cli.add_command(enable_key_auth_global)
 # plugins_cli.add_command(enable_acl_routes)
 # plugins_cli.add_command(enable_acl_services)
 plugins_cli.add_command(enable_acl_global)
+plugins_cli.add_command(enable_rate_limiting_global)
 plugins_cli.add_command(delete)
