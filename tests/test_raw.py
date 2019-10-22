@@ -5,13 +5,13 @@ import re
 import pytest
 
 
-@pytest.mark.parametrize('env', (True, False))
+@pytest.mark.parametrize("env", (True, False))
 def test_raw_info(invoke, clean_kong, env, kong_admin):
     if env:
         extra = []
     else:
-        os.environ.pop('KONG_BASE', None)
-        extra = ['--url', kong_admin]
+        os.environ.pop("KONG_BASE", None)
+        extra = ["--url", kong_admin]
     result = invoke(extra + ["raw", "GET", "/"], mix_stderr=False)
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> GET {kong_admin}/\n")
