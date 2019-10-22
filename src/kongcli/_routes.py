@@ -13,8 +13,8 @@ from ._plugins import (
     enable_basic_auth_routes,
     enable_key_auth_routes,
     enable_rate_limiting_routes,
-    enable_response_ratelimiting_routes,
     enable_request_size_limiting_routes,
+    enable_response_ratelimiting_routes,
 )
 from ._util import get, parse_datetimes
 from .kong import general

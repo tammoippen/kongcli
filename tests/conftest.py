@@ -23,20 +23,48 @@ def invoke():
 
 
 @pytest.fixture()
-def session():
-    session = LiveServerSession("http://localhost:8001")
+def kong_pg_host():
+    return os.environ.get("KONG_PG_HOST", "localhost")
+
+
+@pytest.fixture(autouse=True)
+def kong_admin():
+    host = os.environ.get("KONG_HOST", "localhost")
+    port = os.environ.get("KONG_ADMIN_PORT", "8001")
+    os.environ["KONG_BASE"] = f"http://{host}:{port}"
+    yield os.environ["KONG_BASE"]
+    os.environ.pop("KONG_BASE", None)
+
+
+@pytest.fixture()
+def kong_regular():
+    host = os.environ.get("KONG_HOST", "localhost")
+    port = os.environ.get("KONG_PORT", "8000")
+    return f"http://{host}:{port}"
+
+
+@pytest.fixture()
+def httpbin():
+    host = os.environ.get("HTTPBIN_HOST", "localhost")
+    port = os.environ.get("HTTPBIN_PORT", "8080")
+    return f"http://{host}:{port}"
+
+
+@pytest.fixture()
+def session(kong_admin):
+    session = LiveServerSession(kong_admin)
     yield session
     session.close()
 
 
 @pytest.fixture()
-def clean_kong():
+def clean_kong(kong_pg_host):
     _reset_cache()
     with psycopg2.connect(
         database=os.environ.get("KONG_PG_DATABASE", "kong"),
         user=os.environ.get("KONG_PG_USER", "kong"),
         password=os.environ.get("KONG_PG_PASSWORD", "kong"),
-        host="localhost",
+        host=kong_pg_host,
         cursor_factory=DictCursor,
     ) as conn, conn.cursor() as cursor:
         cursor.execute(
@@ -54,8 +82,8 @@ def kong_version(session):
 
 
 @pytest.fixture()
-def sample(clean_kong, session):
-    service = add("services", session, name="httpbin", url="http://localhost:8080")
+def sample(clean_kong, session, httpbin):
+    service = add("services", session, name="httpbin", url=httpbin)
     route = add("routes", session, service={"id": service["id"]}, paths=["/httpbin"])
     consumer = add("consumers", session, username="foobar", custom_id="1234")
 

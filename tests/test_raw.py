@@ -1,11 +1,20 @@
 import json
+import os
 import re
 
+import pytest
 
-def test_raw_info(invoke, clean_kong):
-    result = invoke(["raw", "GET", "/"], mix_stderr=False)
+
+@pytest.mark.parametrize('env', (True, False))
+def test_raw_info(invoke, clean_kong, env, kong_admin):
+    if env:
+        extra = []
+    else:
+        os.environ.pop('KONG_BASE', None)
+        extra = ['--url', kong_admin]
+    result = invoke(extra + ["raw", "GET", "/"], mix_stderr=False)
     assert result.exit_code == 0
-    assert result.stderr.startswith("> GET http://localhost:8001/\n")
+    assert result.stderr.startswith(f"> GET {kong_admin}/\n")
     lines = result.stdout.split("\n")
 
     for line in reversed(lines):
@@ -17,12 +26,12 @@ def test_raw_info(invoke, clean_kong):
             break
 
 
-def test_raw_single_data(invoke, clean_kong):
+def test_raw_single_data(invoke, clean_kong, kong_admin):
     result = invoke(
         ["raw", "-d", "custom_id", "foobar", "POST", "/consumers"], mix_stderr=False
     )
     assert result.exit_code == 0
-    assert result.stderr.startswith("> POST http://localhost:8001/consumers\n")
+    assert result.stderr.startswith(f"> POST {kong_admin}/consumers\n")
     lines = result.stdout.split("\n")
 
     for line in reversed(lines):
@@ -36,7 +45,7 @@ def test_raw_single_data(invoke, clean_kong):
             break
 
 
-def test_raw_multiple_data(invoke, clean_kong):
+def test_raw_multiple_data(invoke, clean_kong, kong_admin):
     result = invoke(
         [
             "raw",
@@ -52,7 +61,7 @@ def test_raw_multiple_data(invoke, clean_kong):
         mix_stderr=False,
     )
     assert result.exit_code == 0
-    assert result.stderr.startswith("> POST http://localhost:8001/consumers\n")
+    assert result.stderr.startswith(f"> POST {kong_admin}/consumers\n")
     lines = result.stdout.split("\n")
 
     for line in reversed(lines):
@@ -66,18 +75,18 @@ def test_raw_multiple_data(invoke, clean_kong):
             break
 
 
-def test_raw_single_header(invoke, clean_kong):
+def test_raw_single_header(invoke, clean_kong, kong_admin):
     result = invoke(
         ["raw", "-H", "X-Custom-Header", "foobar", "GET", "/"], mix_stderr=False
     )
     assert result.exit_code == 0
-    assert result.stderr.startswith("> GET http://localhost:8001/\n")
+    assert result.stderr.startswith(f"> GET {kong_admin}/\n")
     lines = result.stderr.split("\n")
 
     assert any(line == "> X-Custom-Header: foobar" for line in lines)
 
 
-def test_raw_multiple_header(invoke, clean_kong):
+def test_raw_multiple_header(invoke, clean_kong, kong_admin):
     result = invoke(
         [
             "raw",
@@ -93,7 +102,7 @@ def test_raw_multiple_header(invoke, clean_kong):
         mix_stderr=False,
     )
     assert result.exit_code == 0
-    assert result.stderr.startswith("> GET http://localhost:8001/\n")
+    assert result.stderr.startswith(f"> GET {kong_admin}/\n")
     lines = result.stderr.split("\n")
 
     assert any(line == "> X-Custom-Header: foobar" for line in lines)

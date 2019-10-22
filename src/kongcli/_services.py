@@ -12,8 +12,8 @@ from ._plugins import (
     enable_basic_auth_services,
     enable_key_auth_services,
     enable_rate_limiting_services,
-    enable_response_ratelimiting_services,
     enable_request_size_limiting_services,
+    enable_response_ratelimiting_services,
 )
 from ._util import get, parse_datetimes
 from .kong import general

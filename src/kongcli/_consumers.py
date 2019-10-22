@@ -8,8 +8,8 @@ from tabulate import tabulate
 
 from ._plugins import (
     enable_rate_limiting_consumers,
-    enable_response_ratelimiting_consumers,
     enable_request_size_limiting_consumers,
+    enable_response_ratelimiting_consumers,
 )
 from ._util import get, parse_datetimes, sort_dict
 from .kong import consumers, general

@@ -23,8 +23,11 @@ commands:
           name: Testing.
           command: |
             sudo docker run --rm -it \
-                            --network container:kong \
-                            --network container:kong_database \
+                            --network tests_default \
+                            -e KONG_HOST=kong \
+                            -e KONG_PG_HOST=kong_database \
+                            -e HTTPBIN_HOST=httpbin \
+                            -e HTTPBIN_PORT=80 \
                             -v $PWD:/app \
                             tammoippen/kongcli:latest make ci
       - run:
