@@ -1,6 +1,6 @@
 import json
 from operator import itemgetter
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Tuple
 from uuid import UUID
 
 import click
@@ -578,7 +578,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin['config'] = json.dumps(plugin['config'], indent=2, sort_keys=True)
+        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_acl
@@ -590,6 +590,241 @@ enable_rate_limiting_consumers = _enable_rate_limiting_on_resource("consumers")
 enable_rate_limiting_global = _enable_rate_limiting_on_resource("global")
 # TODO update rate-limit
 
+
+def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
+    assert resource in ("services", "routes", "consumers", "global")
+
+    @click.command(name=f"enable-response-ratelimiting-on-{resource}")
+    @click.option(
+        "--enabled",
+        type=bool,
+        default=True,
+        help="Whether this plugin will be applied.",
+    )
+    @click.option(
+        "--second",
+        type=(str, int),
+        multiple=True,
+        help="The amount of HTTP requests the developer can make per second. At least one limit must exist.",
+    )
+    @click.option(
+        "--minute",
+        type=(str, int),
+        multiple=True,
+        help="The amount of HTTP requests the developer can make per minute. At least one limit must exist.",
+    )
+    @click.option(
+        "--hour",
+        type=(str, int),
+        multiple=True,
+        help="The amount of HTTP requests the developer can make per hour. At least one limit must exist.",
+    )
+    @click.option(
+        "--day",
+        type=(str, int),
+        multiple=True,
+        help="The amount of HTTP requests the developer can make per day. At least one limit must exist.",
+    )
+    @click.option(
+        "--month",
+        type=(str, int),
+        multiple=True,
+        help="The amount of HTTP requests the developer can make per month. At least one limit must exist.",
+    )
+    @click.option(
+        "--year",
+        type=(str, int),
+        multiple=True,
+        help="The amount of HTTP requests the developer can make per year. At least one limit must exist.",
+    )
+    @click.option(
+        "--header_name",
+        type=str,
+        help="The name of the response header used to increment the counters.",
+        default="X-Kong-limit",
+    )
+    @click.option(
+        "--block_on_first_violation",
+        type=bool,
+        default=False,
+        help="A boolean value that determines if the requests should be blocked as soon as one limit is being exceeded. This will block requests that are supposed to consume other limits too.",
+    )
+    @click.option(
+        "--limit_by",
+        type=click.Choice(["consumer", "credential", "ip"]),
+        help="The entity that will be used when aggregating the limits: consumer, credential, ip. If the consumer or the credential cannot be determined, the system will always fallback to ip.",
+        default="consumer",
+    )
+    @click.option(
+        "--policy",
+        type=click.Choice(["local", "cluster", "redis"]),
+        default="cluster",
+        help="The response-ratelimiting policies to use for retrieving and incrementing the limits. Available values are local (counters will be stored locally in-memory on the node), cluster (counters are stored in the datastore and shared across the nodes) and redis (counters are stored on a Redis server and will be shared across the nodes). In case of DB-less mode, at least one of local or redis must be specified. Please refer Implementation Considerations for details on which policy should be used.",
+    )
+    @click.option(
+        "--fault_tolerant",
+        type=bool,
+        default=True,
+        help="A boolean value that determines if the requests should be proxied even if Kong has troubles connecting a third-party datastore. If true requests will be proxied anyways effectively disabling the response-ratelimiting function until the datastore is working again. If false then the clients will see 500 errors.",
+    )
+    @click.option(
+        "--hide_client_headers",
+        type=bool,
+        default=False,
+        help="Optionally hide informative response headers.",
+    )
+    @click.option(
+        "--redis_host",
+        type=str,
+        help="When using the redis policy, this property specifies the address to the Redis server.",
+    )
+    @click.option(
+        "--redis_port",
+        type=int,
+        help="When using the redis policy, this property specifies the port of the Redis server.",
+        default=6379,
+    )
+    @click.option(
+        "--redis_password",
+        type=str,
+        help="When using the redis policy, this property specifies the password to connect to the Redis server.",
+    )
+    @click.option(
+        "--redis_timeout",
+        type=int,
+        help="When using the redis policy, this property specifies the timeout in milliseconds of any command submitted to the Redis server.",
+        default=2000,
+    )
+    @click.option(
+        "--redis_database",
+        type=int,
+        help="When using the redis policy, this property specifies Redis database to use.",
+        default=0,
+    )
+    @click.argument("resource_id", required=resource != "global")
+    @click.pass_context
+    def enable_acl(
+        ctx: click.Context,
+        resource_id: str,
+        enabled: bool,
+        second: Iterable[Tuple[str, int]],
+        minute: Iterable[Tuple[str, int]],
+        hour: Iterable[Tuple[str, int]],
+        day: Iterable[Tuple[str, int]],
+        month: Iterable[Tuple[str, int]],
+        year: Iterable[Tuple[str, int]],
+        header_name: str,
+        block_on_first_violation: bool,
+        limit_by: str,
+        policy: str,
+        fault_tolerant: bool,
+        hide_client_headers: bool,
+        redis_host: Optional[str],
+        redis_port: int,
+        redis_password: Optional[str],
+        redis_timeout: int,
+        redis_database: int,
+    ) -> None:
+        """Enable the response-ratelimiting plugin.
+
+        This plugin allows you to limit the number of requests a developer can make
+        based on a custom response header returned by the upstream service. You can
+        arbitrary set as many rate-limiting objects (or quotas) as you want and instruct
+        Kong to increase or decrease them by any number of units. Each custom rate-limiting
+        object can limit the inbound requests per seconds, minutes, hours, days, months or years.
+
+        If the underlying Service/Route (or deprecated API entity) has no authentication
+        layer, the Client IP address will be used, otherwise the Consumer will be
+        used if an authentication plugin has been configured.
+
+        Kong API expects the limits to be set like:
+
+        \b
+        config.limits.{limit_name}   This is a list of custom objects that you can set,
+                                     with arbitrary names set in the {limit_name} placeholder,
+                                     like config.limits.sms.minute=20 if your object is called “SMS”.
+
+        \b
+        kongcli syntax is, using the options for the interval like:
+            `--minute sms 20`
+            `--{interval} {limit_name} {limit}`.
+        """
+        session = ctx.obj["session"]
+        tablefmt = ctx.obj["tablefmt"]
+
+        payload: Dict[str, Any] = {
+            "enabled": enabled,
+            "config": {
+                "hide_client_headers": hide_client_headers,
+                "fault_tolerant": fault_tolerant,
+                "limit_by": limit_by,
+                "policy": policy,
+                "header_name": header_name,
+                "block_on_first_violation": block_on_first_violation,
+                "limits": {},
+            },
+        }
+
+        if not (second or minute or hour or day or month or year):
+            click.echo("At least one limit must exist.", err=True)
+            raise click.Abort()
+
+        for name, limits in [
+            ("second", second),
+            ("minute", minute),
+            ("hour", hour),
+            ("day", day),
+            ("month", month),
+            ("year", year),
+        ]:
+            for limit_name, limit in limits:
+                if limit_name not in payload["config"]["limits"]:
+                    payload["config"]["limits"][limit_name] = {}
+                payload["config"]["limits"][limit_name][name] = limit
+
+        if policy == "redis":
+            if redis_host is None:
+                click.echo("Provide the configuration for redis.", err=True)
+                raise click.Abort()
+            payload["config"].update(
+                {
+                    "redis_host": redis_host,
+                    "redis_port": redis_port,
+                    "redis_timeout": redis_timeout,
+                    "redis_database": redis_database,
+                }
+            )
+            if redis_password is not None:
+                payload["config"]["redis_password"] = redis_password
+
+        if resource != "global":
+            plugin = plugins.enable_on(
+                session, resource, resource_id, "response-ratelimiting", **payload
+            )
+        else:
+            payload["name"] = "response-ratelimiting"
+            plugin = general.add("plugins", session, **payload)
+
+        parse_datetimes(plugin)
+        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+
+    return enable_acl
+
+
+enable_response_ratelimiting_routes = _enable_response_ratelimiting_on_resource(
+    "routes"
+)
+enable_response_ratelimiting_services = _enable_response_ratelimiting_on_resource(
+    "services"
+)
+enable_response_ratelimiting_consumers = _enable_response_ratelimiting_on_resource(
+    "consumers"
+)
+enable_response_ratelimiting_global = _enable_response_ratelimiting_on_resource(
+    "global"
+)
+# TODO update response-ratelimiting
 
 # TODO enable Request Size Limiting
 # TODO update Request Size Limiting
@@ -652,4 +887,5 @@ plugins_cli.add_command(enable_key_auth_global)
 # plugins_cli.add_command(enable_acl_services)
 plugins_cli.add_command(enable_acl_global)
 plugins_cli.add_command(enable_rate_limiting_global)
+plugins_cli.add_command(enable_response_ratelimiting_global)
 plugins_cli.add_command(delete)
