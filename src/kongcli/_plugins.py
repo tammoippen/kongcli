@@ -494,7 +494,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
     )
     @click.argument("resource_id", required=resource != "global")
     @click.pass_context
-    def enable_acl(
+    def enable_rate_limit(
         ctx: click.Context,
         resource_id: str,
         enabled: bool,
@@ -581,7 +581,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
         plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
-    return enable_acl
+    return enable_rate_limit
 
 
 enable_rate_limiting_routes = _enable_rate_limiting_on_resource("routes")
@@ -703,7 +703,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
     )
     @click.argument("resource_id", required=resource != "global")
     @click.pass_context
-    def enable_acl(
+    def enable_response_ratelimiting(
         ctx: click.Context,
         resource_id: str,
         enabled: bool,
@@ -809,7 +809,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
         plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
-    return enable_acl
+    return enable_response_ratelimiting
 
 
 enable_response_ratelimiting_routes = _enable_response_ratelimiting_on_resource(
