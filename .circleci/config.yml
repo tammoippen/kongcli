@@ -14,7 +14,8 @@ commands:
             env
             sudo -E docker-compose --project-name tests up -d
             sleep 5
-            curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
+            sudo docker run --network container:kong --rm -it \
+              tammoippen/kongcli:latest curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
       - run:
           name: Testing.
           command: |
