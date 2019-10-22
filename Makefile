@@ -13,7 +13,8 @@ tests:
 
 ci:
 	poetry install
-	@$(MAKE) -f $(THIS_FILE) statics tests
+	@$(MAKE) -f $(THIS_FILE) statics
+	pytest -p no:sugar
 
 
 .PHONY: format statics tests ci

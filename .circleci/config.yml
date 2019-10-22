@@ -3,9 +3,6 @@ version: 2.1
 commands:
   tester:
     steps:
-      # local:
-      #    comment: - checkout
-      #    run: circleci config process .circleci/config.yml  > .circleci/config2.yml && circleci local execute -c .circleci/config2.yml  --job test_1_1 -v $PWD:/home/circleci/app
       - checkout
       - run:
           name: Build image.
@@ -17,8 +14,7 @@ commands:
             env
             sudo -E docker-compose --project-name tests up -d
             sleep 5
-            sudo docker run --network container:kong --rm -it \
-              byrnedo/alpine-curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
+            curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
       - run:
           name: Testing.
           command: |
@@ -39,7 +35,6 @@ commands:
           command: |
             sudo docker run --rm -it \
                             -v $PWD:/app \
-                            --entrypoint /bin/sh \
                             tammoippen/kongcli:latest poetry build -vvv -f sdist
       - store_artifacts:
           path: ~/app/dist
@@ -52,7 +47,6 @@ commands:
           command: |
             sudo docker run --rm -it \
                             -v $PWD:/app \
-                            --entrypoint /bin/sh \
                             tammoippen/kongcli:latest poetry run coveralls
 
 executors:
