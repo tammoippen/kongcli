@@ -13,7 +13,7 @@ commands:
             set -x
             env
             sudo -E docker-compose --project-name tests up -d
-            sleep 5
+            sleep 10
             sudo docker run --network container:kong --rm -it \
               tammoippen/kongcli:latest curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
       - run:
@@ -47,8 +47,9 @@ commands:
           name: Coverage
           command: |
             sudo docker run --rm -it \
+                            -e COVERALLS_REPO_TOKEN \
                             -v $PWD:/app \
-                            tammoippen/kongcli:latest poetry run coveralls
+                            tammoippen/kongcli:latest make coveralls
 
 executors:
   default:
