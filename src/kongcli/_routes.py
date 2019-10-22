@@ -14,6 +14,7 @@ from ._plugins import (
     enable_key_auth_routes,
     enable_rate_limiting_routes,
     enable_response_ratelimiting_routes,
+    enable_request_size_limiting_routes,
 )
 from ._util import get, parse_datetimes
 from .kong import general
@@ -332,6 +333,9 @@ routes_cli.add_command(enable_basic_auth_routes, name="enable-basic-auth")
 routes_cli.add_command(enable_key_auth_routes, name="enable-key-auth")
 routes_cli.add_command(enable_acl_routes, name="enable-key-auth")
 routes_cli.add_command(enable_rate_limiting_routes, name="enable-rate-limiting")
+routes_cli.add_command(
+    enable_request_size_limiting_routes, name="enable-request-size-limiting"
+)
 routes_cli.add_command(
     enable_response_ratelimiting_routes, name="enable-response-ratelimiting"
 )

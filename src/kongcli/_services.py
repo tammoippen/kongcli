@@ -13,6 +13,7 @@ from ._plugins import (
     enable_key_auth_services,
     enable_rate_limiting_services,
     enable_response_ratelimiting_services,
+    enable_request_size_limiting_services,
 )
 from ._util import get, parse_datetimes
 from .kong import general
@@ -350,6 +351,9 @@ services_cli.add_command(enable_basic_auth_services, name="enable-basic-auth")
 services_cli.add_command(enable_key_auth_services, name="enable-key-auth")
 services_cli.add_command(enable_acl_services, name="enable-acl")
 services_cli.add_command(enable_rate_limiting_services, name="enable-rate-limiting")
+services_cli.add_command(
+    enable_request_size_limiting_services, name="enable-request-size-limiting"
+)
 services_cli.add_command(
     enable_response_ratelimiting_services, name="enable-response-ratelimiting"
 )

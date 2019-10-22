@@ -145,6 +145,7 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_basic_auth
@@ -213,6 +214,7 @@ def update_basic_auth(
         payload["name"] = "basic-auth"
         plugin = general.update("plugins", session, str(plugin_id), **payload)
     parse_datetimes(plugin)
+    plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
     click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
 
@@ -297,6 +299,7 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_key_auth
@@ -389,6 +392,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_acl
@@ -826,7 +830,72 @@ enable_response_ratelimiting_global = _enable_response_ratelimiting_on_resource(
 )
 # TODO update response-ratelimiting
 
-# TODO enable Request Size Limiting
+
+def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
+    assert resource in ("services", "routes", "consumers", "global")
+
+    @click.command(name=f"enable-request-size-limiting-on-{resource}")
+    @click.option(
+        "--enabled",
+        type=bool,
+        default=True,
+        help="Whether this plugin will be applied.",
+    )
+    @click.option(
+        "--allowed_payload_size",
+        type=int,
+        help="Allowed request payload size in megabytes, default is 128 (128000000 Bytes)",
+        default=128,
+    )
+    @click.argument("id_name", required=resource != "global")
+    @click.pass_context
+    def request_size_limiting(
+        ctx: click.Context, id_name: str, enabled: bool, allowed_payload_size: int
+    ) -> None:
+        """Enable the request-size-limiting plugin.
+
+        Block incoming requests whose body is greater than a specific size in megabytes.
+
+        \b
+        *Note*: For security reasons we suggest enabling this plugin for any
+                Service you add to Kong to prevent a DOS (Denial of Service)
+                attack.
+        """
+        session = ctx.obj["session"]
+        tablefmt = ctx.obj["tablefmt"]
+
+        payload: Dict[str, Any] = {
+            "enabled": enabled,
+            "config": {"allowed_payload_size": allowed_payload_size},
+        }
+
+        if resource != "global":
+            plugin = plugins.enable_on(
+                session, resource, id_name, "request-size-limiting", **payload
+            )
+        else:
+            payload["name"] = "request-size-limiting"
+            plugin = general.add("plugins", session, **payload)
+
+        parse_datetimes(plugin)
+        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
+
+    return request_size_limiting
+
+
+enable_request_size_limiting_routes = _enable_request_size_limiting_on_resource(
+    "routes"
+)
+enable_request_size_limiting_services = _enable_request_size_limiting_on_resource(
+    "services"
+)
+enable_request_size_limiting_consumers = _enable_request_size_limiting_on_resource(
+    "consumers"
+)
+enable_request_size_limiting_global = _enable_request_size_limiting_on_resource(
+    "global"
+)
 # TODO update Request Size Limiting
 
 
@@ -888,4 +957,5 @@ plugins_cli.add_command(enable_key_auth_global)
 plugins_cli.add_command(enable_acl_global)
 plugins_cli.add_command(enable_rate_limiting_global)
 plugins_cli.add_command(enable_response_ratelimiting_global)
+plugins_cli.add_command(enable_request_size_limiting_global)
 plugins_cli.add_command(delete)
