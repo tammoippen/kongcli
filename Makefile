@@ -16,9 +16,4 @@ ci:
 	@$(MAKE) -f $(THIS_FILE) statics
 	pytest -p no:sugar
 
-coveralls:
-	pip install coveralls
-	coveralls
-
-
 .PHONY: format statics tests ci
