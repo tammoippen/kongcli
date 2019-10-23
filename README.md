@@ -23,6 +23,12 @@ I started this project for *my most used endpoints*, i.e. there is a lot of not-
 $ pip install kongcli
 ```
 
+or using [pipx](https://github.com/pipxproject/pipx):
+
+```sh
+$ pipx install kongcli
+```
+
 ## usage
 
 `kongcli` support `-h` / `--help` and documentation for the individual commands (along with documentation on [Kong Admin API](https://docs.konghq.com/1.3.x/admin-api/) for your kong version) should be sufficient to get most common operations done with ease:
