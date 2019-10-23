@@ -16,4 +16,9 @@ ci:
 	@$(MAKE) -f $(THIS_FILE) statics
 	pytest -p no:sugar
 
+coveralls:
+	apt-get update && apt-get install -y git
+	pip install coveralls
+	coveralls
+
 .PHONY: format statics tests ci

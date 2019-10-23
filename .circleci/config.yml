@@ -46,8 +46,10 @@ commands:
       - run:
           name: Coverage
           command: |
-            pip install coveralls
-            coveralls
+            sudo docker run --rm -it \
+                            -v $PWD:/app \
+                            -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN \
+                            tammoippen/kongcli:latest make coveralls
 
 executors:
   default:
