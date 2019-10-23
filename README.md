@@ -1,11 +1,15 @@
 [![CircleCI](https://circleci.com/gh/tammoippen/kongcli.svg?style=svg)](https://circleci.com/gh/tammoippen/kongcli)
 [![Coverage Status](https://coveralls.io/repos/github/tammoippen/kongcli/badge.svg?branch=master)](https://coveralls.io/github/tammoippen/kongcli?branch=master)
+[![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/tammoippen/kongcli.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tammoippen/kongcli/context:python)
+![kong](https://img.shields.io/badge/kong-0.13%2C%200.14%2C%200.15%2C%201.0%2C%201.1%2C%201.2%2C%201.3-brightgreen)
+[![PyPi version](https://img.shields.io/pypi/v/kongcli.svg)](https://pypi.python.org/pypi/kongcli)
+[![PyPi license](https://img.shields.io/pypi/l/kongcli.svg)](https://pypi.python.org/pypi/kongcli)
 
 # kongcli - cli for kong admin api
 
 *Note:* usable but still alpha quality - I will remove the alpha flag as soon as the coverage is above 90%.
 
-This is a command line interface (cli) to configure the awesome [kong](https://konghq.com/), espacially using the [kong admin api](https://docs.konghq.com/1.3.x/admin-api/). There are alternatives like
+This is a command line interface (cli) to configure the awesome [kong](https://konghq.com/), especially using the [kong admin api](https://docs.konghq.com/1.3.x/admin-api/). There are alternatives like
 
 - [konga](https://pantsel.github.io/konga/): Web GUI.
 - [kong-cli](https://github.com/passos/kong-cli): CLI to Kong 0.10.x. (Last commit Jul 2017, as of this writing)
@@ -218,7 +222,7 @@ Deleted consumer `foobar`!
 
 The project still needs some love. If you want to contribute, please consider the following things:
 
-- We cannot know, which version of kong somebody is stuck with - please make your contributions compatible with 0.13+. If there is a new feature not supported downwards, please do not attempt to contribute it. Also, do not contribute depricated API, e.g. [API Objects](https://docs.konghq.com/0.13.x/admin-api/#api-object) etc. .
+- We cannot know, which version of kong somebody is stuck with - please make your contributions compatible with 0.13+. If there is a new feature not supported downwards, please do not attempt to contribute it. Also, do not contribute deprecated API, e.g. [API Objects](https://docs.konghq.com/0.13.x/admin-api/#api-object) etc. .
 - make sure CI will most likely pass, e.g.:
     - static tests: `make statics`
     - pytests: `make tests`
