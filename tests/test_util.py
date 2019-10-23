@@ -10,8 +10,7 @@ def test_get():
 
     def _helper():
         nonlocal called
-        if called:
-            assert False, "Already called - not cached."
+        assert not called, "Already called - not cached."
         called = True
         return 42
 

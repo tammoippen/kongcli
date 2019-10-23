@@ -6,6 +6,11 @@ import click
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
+from ._plugins import (
+    enable_rate_limiting_consumers,
+    enable_request_size_limiting_consumers,
+    enable_response_ratelimiting_consumers,
+)
 from ._util import get, parse_datetimes, sort_dict
 from .kong import consumers, general
 
@@ -281,6 +286,13 @@ consumers_cli.add_command(retrieve)
 consumers_cli.add_command(delete)
 consumers_cli.add_command(add_groups, name="add-groups")
 consumers_cli.add_command(delete_groups, name="delete-groups")
+consumers_cli.add_command(enable_rate_limiting_consumers, name="enable-rate-limiting")
+consumers_cli.add_command(
+    enable_request_size_limiting_consumers, name="enable-request-size-limiting"
+)
+consumers_cli.add_command(
+    enable_response_ratelimiting_consumers, name="enable-response-ratelimiting"
+)
 consumers_cli.add_command(update)
 
 

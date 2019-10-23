@@ -3,9 +3,6 @@ version: 2.1
 commands:
   tester:
     steps:
-      # local:
-      #    comment: - checkout
-      #    run: circleci config process .circleci/config.yml  > .circleci/config2.yml && circleci local execute -c .circleci/config2.yml  --job test_1_1 -v $PWD:/home/circleci/app
       - checkout
       - run:
           name: Build image.
@@ -16,15 +13,18 @@ commands:
             set -x
             env
             sudo -E docker-compose --project-name tests up -d
-            sleep 5
+            sleep 10
             sudo docker run --network container:kong --rm -it \
-              byrnedo/alpine-curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
+              tammoippen/kongcli:latest curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
       - run:
           name: Testing.
           command: |
             sudo docker run --rm -it \
-                            --network container:kong \
-                            --network container:kong_database \
+                            --network tests_default \
+                            -e KONG_HOST=kong \
+                            -e KONG_PG_HOST=kong_database \
+                            -e HTTPBIN_HOST=httpbin \
+                            -e HTTPBIN_PORT=80 \
                             -v $PWD:/app \
                             tammoippen/kongcli:latest make ci
       - run:
@@ -36,7 +36,6 @@ commands:
           command: |
             sudo docker run --rm -it \
                             -v $PWD:/app \
-                            --entrypoint /bin/sh \
                             tammoippen/kongcli:latest poetry build -vvv -f sdist
       - store_artifacts:
           path: ~/app/dist
@@ -47,10 +46,8 @@ commands:
       - run:
           name: Coverage
           command: |
-            sudo docker run --rm -it \
-                            -v $PWD:/app \
-                            --entrypoint /bin/sh \
-                            tammoippen/kongcli:latest poetry run coveralls
+            pip install coveralls
+            coveralls
 
 executors:
   default:

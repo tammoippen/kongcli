@@ -12,9 +12,8 @@ tests:
 	pytest
 
 ci:
-	apt-get update && apt-get install -y build-essential  # typed-ast
 	poetry install
-	@$(MAKE) -f $(THIS_FILE) statics tests
-
+	@$(MAKE) -f $(THIS_FILE) statics
+	pytest -p no:sugar
 
 .PHONY: format statics tests ci
