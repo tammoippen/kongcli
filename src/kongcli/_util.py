@@ -40,7 +40,6 @@ def dict_from_dot(data: Sequence[Tuple[str, str]]) -> Dict[str, Any]:
             value = json.loads(v)
         except json.JSONDecodeError:
             logger.info(f"Cannot parse `{v}` to json, assuming string.")
-            pass
 
         assert (
             key_parts[-1] not in curr
