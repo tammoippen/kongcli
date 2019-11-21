@@ -12,6 +12,8 @@ class LiveServerSession(Session):
         logger.debug(f"Will use `{prefix_url}` as prefix for every request.")
         self.prefix_url = prefix_url
 
-    def request(self, method: str, url: str, *args: Any, **kwargs: Any) -> Response:
+    def request(  # type: ignore
+        self, method: str, url: str, *args: Any, **kwargs: Any
+    ) -> Response:
         url = f"{self.prefix_url}{url}"
         return super(LiveServerSession, self).request(method, url, *args, **kwargs)
