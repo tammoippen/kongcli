@@ -1,4 +1,3 @@
-import json
 from operator import itemgetter
 from typing import Dict, Optional, Union
 
@@ -15,7 +14,7 @@ from ._plugins import (
     enable_request_size_limiting_services,
     enable_response_ratelimiting_services,
 )
-from ._util import get, parse_datetimes
+from ._util import get, json_pretty, parse_datetimes
 from .kong import general
 
 
@@ -59,9 +58,7 @@ def list_services(ctx: click.Context, full_plugins: bool) -> None:
                     sdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     sdata["blacklist"] |= set(p["config"].get("blacklist", []))
                 elif full_plugins:
-                    sdata["plugins"] += [
-                        f"{p['name']}:\n{json.dumps(p['config'], indent=2, sort_keys=True)}"
-                    ]
+                    sdata["plugins"] += [f"{p['name']}:\n{json_pretty(p['config'])}"]
                 else:
                     sdata["plugins"] += [p["name"]]
         sdata["whitelist"] = "\n".join(sorted(sdata["whitelist"]))

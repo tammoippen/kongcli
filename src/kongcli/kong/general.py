@@ -1,4 +1,3 @@
-import json
 from typing import Any, Dict, List
 
 from loguru import logger
@@ -6,6 +5,7 @@ import requests
 from urllib3.util import parse_url
 
 from ._util import _check_resp
+from .._util import json_dumps
 
 
 def information(session: requests.Session) -> Dict[str, Any]:
@@ -52,8 +52,11 @@ def add(resource: str, session: requests.Session, **kwargs: Any) -> Dict[str, An
         "key-auths",
         "basic-auths",
     )
-    logger.debug(f"Add `{resource}` with `{json.dumps(kwargs)}` ... ")
-    resp = session.post(f"/{resource}/", json=kwargs)
+    payload = json_dumps(kwargs)
+    logger.debug(f"Add `{resource}` with `{payload}` ... ")
+    resp = session.post(
+        f"/{resource}/", data=payload, headers={"content-type": "application/json"}
+    )
     _check_resp(resp)
     data: Dict[str, Any] = resp.json()
     return data
@@ -94,7 +97,11 @@ def update(
 ) -> Dict[str, Any]:
     assert resource in ("consumers", "services", "routes", "plugins")
     logger.debug(f"Update `{resource}` with id = `{id_}` ... ")
-    resp = session.patch(f"/{resource}/{id_}", json=kwargs)
+    resp = session.patch(
+        f"/{resource}/{id_}",
+        data=json_dumps(kwargs),
+        headers={"content-type": "application/json"},
+    )
     _check_resp(resp)
     data: Dict[str, Any] = resp.json()
     return data

@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
-import json
 from typing import Any, Callable, Dict, Sequence, Tuple
 
 from cachetools import LRUCache
 from loguru import logger
+import orjson
 
 CACHE = None
 
@@ -37,8 +37,8 @@ def dict_from_dot(data: Sequence[Tuple[str, str]]) -> Dict[str, Any]:
 
         value = v
         try:
-            value = json.loads(v)
-        except json.JSONDecodeError:
+            value = json_loads(v)
+        except orjson.JSONDecodeError:
             logger.info(f"Cannot parse `{v}` to json, assuming string.")
 
         assert (
@@ -69,4 +69,16 @@ def parse_datetimes(obj: Dict[str, Any]) -> None:
 
 
 def sort_dict(obj: Any) -> Any:
-    return json.loads(json.dumps(obj, sort_keys=True))
+    return json_loads(json_dumps(obj))
+
+
+def json_dumps(obj: Any) -> str:
+    return orjson.dumps(obj, option=orjson.OPT_SORT_KEYS).decode()
+
+
+def json_pretty(obj: Any) -> str:
+    return orjson.dumps(obj, option=orjson.OPT_SORT_KEYS | orjson.OPT_INDENT_2).decode()
+
+
+def json_loads(sobj: str) -> Any:
+    return orjson.loads(sobj)

@@ -1,10 +1,9 @@
-import json
-from typing import Tuple
+from typing import Any, Dict, Optional, Tuple, Union
 
 import click
 
 from ._session import LiveServerSession
-from ._util import dict_from_dot
+from ._util import dict_from_dot, json_dumps
 
 
 @click.command()
@@ -59,14 +58,16 @@ def raw(
         click.echo(f"> {k}: {v}", err=True)
     click.echo(">", err=True)
 
-    payload = None
+    payload: Optional[Union[str, Dict[str, Any]]] = None
     if data:
         payload = dict_from_dot(data)
     if payload:
+        payload = json_dumps(payload)
+        headers_dict['content-type'] = 'application/json'
         click.echo("> Body:", err=True)
-        click.echo(f">{json.dumps(payload)}", err=True)
+        click.echo(f">{payload}", err=True)
 
-    resp = session.request(method, url, headers=headers_dict, json=payload)
+    resp = session.request(method, url, headers=headers_dict, data=payload)
     click.echo(f"< http/{resp.raw.version} {resp.status_code} {resp.reason}", err=True)
     for k, v in resp.headers.items():
         click.echo(f"< {k}: {v}", err=True)

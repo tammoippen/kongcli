@@ -1,4 +1,3 @@
-import json
 from operator import itemgetter
 from typing import Any, Dict, Optional, Tuple
 from uuid import UUID
@@ -16,7 +15,7 @@ from ._plugins import (
     enable_request_size_limiting_routes,
     enable_response_ratelimiting_routes,
 )
-from ._util import get, parse_datetimes
+from ._util import get, json_pretty, parse_datetimes
 from .kong import general
 
 
@@ -65,9 +64,7 @@ def list_routes(ctx: click.Context, full_plugins: bool) -> None:
                     rdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     rdata["blacklist"] |= set(p["config"].get("blacklist", []))
                 elif full_plugins:
-                    rdata["plugins"] += [
-                        f"{p['name']}:\n{json.dumps(p['config'], indent=2, sort_keys=True)}"
-                    ]
+                    rdata["plugins"] += [f"{p['name']}:\n{json_pretty(p['config'])}"]
                 else:
                     rdata["plugins"] += [p["name"]]
         rdata["whitelist"] = "\n".join(sorted(rdata["whitelist"]))

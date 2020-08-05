@@ -1,4 +1,3 @@
-import json
 from typing import Optional, Tuple
 from uuid import UUID
 
@@ -11,7 +10,7 @@ from ._plugins import (
     enable_request_size_limiting_consumers,
     enable_response_ratelimiting_consumers,
 )
-from ._util import get, parse_datetimes, sort_dict
+from ._util import get, json_pretty, parse_datetimes, sort_dict
 from .kong import consumers, general
 
 
@@ -79,8 +78,7 @@ def list_consumers(ctx: click.Context, full_keys: bool, full_plugins: bool) -> N
         cdata["acl_groups"] = "\n".join(sorted(cdata["acl_groups"]))
         if full_plugins:
             cdata["plugins"] = "\n".join(
-                f"{name}:\n{json.dumps(p, indent=2, sort_keys=True)}"
-                for name, p in sorted(cdata["plugins"])
+                f"{name}:\n{json_pretty(p)}" for name, p in sorted(cdata["plugins"])
             )
         else:
             cdata["plugins"] = "\n".join(sorted(cdata["plugins"]))
@@ -169,7 +167,7 @@ def retrieve(
         )
     if plugins:
         user["plugins"] = "\n\n".join(
-            f"{json.dumps(plugin, indent=2)}"
+            f"{json_pretty(plugin)}"
             for plugin in consumers.plugins(session, id_username)
         )
     click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))

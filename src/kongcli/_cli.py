@@ -1,4 +1,3 @@
-import json
 import sys
 from typing import Any, Optional
 
@@ -13,7 +12,7 @@ from ._raw import raw
 from ._routes import list_routes, routes_cli
 from ._services import list_services, services_cli
 from ._session import LiveServerSession
-from ._util import get
+from ._util import get, json_pretty
 from .kong.general import information
 
 
@@ -100,7 +99,7 @@ cli.add_command(raw)
 def info(ctx: click.Context) -> None:
     """Show information on the kong instance."""
     info = get("information", lambda: information(ctx.obj["session"]))
-    click.echo(json.dumps(info, indent=2))
+    click.echo(json_pretty(info))
 
 
 @cli.command()

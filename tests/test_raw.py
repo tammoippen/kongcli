@@ -12,7 +12,7 @@ def test_raw_info(invoke, clean_kong, env, kong_admin):
     else:
         os.environ.pop("KONG_BASE", None)
         extra = ["--url", kong_admin]
-    result = invoke(extra + ["raw", "GET", "/"], mix_stderr=False)
+    result = invoke(extra + ["raw", "GET", "/"])
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> GET {kong_admin}/\n")
     lines = result.stdout.split("\n")
@@ -27,9 +27,7 @@ def test_raw_info(invoke, clean_kong, env, kong_admin):
 
 
 def test_raw_single_data(invoke, clean_kong, kong_admin):
-    result = invoke(
-        ["raw", "-d", "custom_id", "foobar", "POST", "/consumers"], mix_stderr=False
-    )
+    result = invoke(["raw", "-d", "custom_id", "foobar", "POST", "/consumers"])
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> POST {kong_admin}/consumers\n")
     lines = result.stdout.split("\n")
@@ -58,7 +56,6 @@ def test_raw_multiple_data(invoke, clean_kong, kong_admin):
             "POST",
             "/consumers",
         ],
-        mix_stderr=False,
     )
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> POST {kong_admin}/consumers\n")
@@ -76,9 +73,7 @@ def test_raw_multiple_data(invoke, clean_kong, kong_admin):
 
 
 def test_raw_single_header(invoke, clean_kong, kong_admin):
-    result = invoke(
-        ["raw", "-H", "X-Custom-Header", "foobar", "GET", "/"], mix_stderr=False
-    )
+    result = invoke(["raw", "-H", "X-Custom-Header", "foobar", "GET", "/"])
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> GET {kong_admin}/\n")
     lines = result.stderr.split("\n")
@@ -98,8 +93,7 @@ def test_raw_multiple_header(invoke, clean_kong, kong_admin):
             "barfoo",
             "GET",
             "/",
-        ],
-        mix_stderr=False,
+        ]
     )
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> GET {kong_admin}/\n")

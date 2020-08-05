@@ -1,4 +1,3 @@
-import json
 from operator import itemgetter
 from typing import Any, Dict, Iterable, Optional, Tuple
 from uuid import UUID
@@ -8,7 +7,7 @@ from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get, parse_datetimes
+from ._util import get, json_pretty, parse_datetimes
 from .kong import general, plugins
 
 
@@ -31,7 +30,7 @@ def list_global_plugins(ctx: click.Context) -> None:
             and p.get("service_id") is None
             and p.get("consumer_id") is None
         ):
-            p["config"] = json.dumps(p["config"], indent=2, sort_keys=True)
+            p["config"] = json_pretty(p["config"])
             parse_datetimes(p)
             data.append(p)
 
@@ -56,7 +55,7 @@ def list_plugins(ctx: click.Context) -> None:
     consumers = get("consumers", lambda: general.all_of("consumers", session))
 
     for p in plugins:
-        p["config"] = json.dumps(p["config"], indent=2, sort_keys=True)
+        p["config"] = json_pretty(p["config"])
         parse_datetimes(p)
         service_id = p.get("service_id")
         if service_id:
@@ -85,9 +84,7 @@ def list_plugins(ctx: click.Context) -> None:
 def schema(ctx: click.Context, plugin_name: str) -> None:
     """Get the schema of a certain plugin."""
     session = ctx.obj["session"]
-    click.echo(
-        json.dumps(plugins.schema(session, plugin_name), indent=2, sort_keys=True)
-    )
+    click.echo(json_pretty(plugins.schema(session, plugin_name)))
 
 
 def _enable_basic_auth_on_resource(resource: str) -> click.Command:
@@ -145,7 +142,7 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_basic_auth
@@ -214,7 +211,7 @@ def update_basic_auth(
         payload["name"] = "basic-auth"
         plugin = general.update("plugins", session, str(plugin_id), **payload)
     parse_datetimes(plugin)
-    plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+    plugin["config"] = json_pretty(plugin["config"])
     click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
 
@@ -299,7 +296,7 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_key_auth
@@ -392,7 +389,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_acl
@@ -582,7 +579,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_rate_limit
@@ -810,7 +807,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return enable_response_ratelimiting
@@ -878,7 +875,7 @@ def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
-        plugin["config"] = json.dumps(plugin["config"], indent=2, sort_keys=True)
+        plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
     return request_size_limiting
