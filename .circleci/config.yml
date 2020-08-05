@@ -78,6 +78,7 @@ jobs:
     <<: *test-job
     environment:
       KONG_VERSION_TAG: '0.15'
+      KONG_MIGRATION_CMD: bootstrap
   test_1_0:
     <<: *test-job
     environment:
