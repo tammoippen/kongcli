@@ -21,9 +21,7 @@ from .kong import general
 
 @click.command()
 @click.option(
-    "--full-plugins/--no-full-plugins",
-    default=False,
-    help="Whether to show full plugin config.",
+    "--full-plugins", is_flag=True, help="Whether to show full plugin config.",
 )
 @click.pass_context
 def list_routes(ctx: click.Context, full_plugins: bool) -> None:
@@ -117,8 +115,7 @@ def list_routes(ctx: click.Context, full_plugins: bool) -> None:
 )
 @click.option(
     "--preserve_host",
-    default=False,
-    type=bool,
+    is_flag=True,
     help="When matching a Route via one of the hosts domain names, use the request Host header in the upstream request headers. If set to `false`, the upstream Host header will be that of the Service’s host.",
 )
 @click.option(
@@ -171,9 +168,7 @@ def add(
 
 
 @click.command()
-@click.option(
-    "--plugins/--no-plugins", default=False, help="Get all plugins for the route."
-)
+@click.option("--plugins", is_flag=True, help="Get all plugins for the route.")
 @click.argument("uuid_id")
 @click.pass_context
 def retrieve(ctx: click.Context, uuid_id: str, plugins: bool) -> None:

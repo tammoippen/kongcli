@@ -20,9 +20,7 @@ from .kong import general
 
 @click.command()
 @click.option(
-    "--full-plugins/--no-full-plugins",
-    default=False,
-    help="Whether to show full plugin config.",
+    "--full-plugins", is_flag=True, help="Whether to show full plugin config.",
 )
 @click.pass_context
 def list_services(ctx: click.Context, full_plugins: bool) -> None:
@@ -169,12 +167,8 @@ def add(
 
 
 @click.command()
-@click.option(
-    "--plugins/--no-plugins", default=False, help="Get all plugins for the service."
-)
-@click.option(
-    "--routes/--no-routes", default=False, help="Get all routes for the service."
-)
+@click.option("--plugins", is_flag=True, help="Get all plugins for the service.")
+@click.option("--routes", is_flag=True, help="Get all routes for the service.")
 @click.argument("id_name")
 @click.pass_context
 def retrieve(ctx: click.Context, id_name: str, plugins: bool, routes: bool) -> None:

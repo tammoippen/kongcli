@@ -16,16 +16,10 @@ from .kong import consumers, general
 
 @click.command()
 @click.option(
-    "--full-keys",
-    default=False,
-    is_flag=True,
-    help="Whether to show full keys for key-auth.",
+    "--full-keys", is_flag=True, help="Whether to show full keys for key-auth.",
 )
 @click.option(
-    "--full-plugins",
-    default=False,
-    is_flag=True,
-    help="Whether to show full plugin config.",
+    "--full-plugins", is_flag=True, help="Whether to show full plugin config.",
 )
 @click.pass_context
 def list_consumers(ctx: click.Context, full_keys: bool, full_plugins: bool) -> None:
@@ -122,19 +116,12 @@ def create(
 
 @click.command()
 @click.argument("id_username")
-@click.option("--acls", default=False, is_flag=True, help="Get all acls for the user.")
+@click.option("--acls", is_flag=True, help="Get all acls for the user.")
 @click.option(
-    "--basic-auths",
-    default=False,
-    is_flag=True,
-    help="Get all basic-auth for the user.",
+    "--basic-auths", is_flag=True, help="Get all basic-auth for the user.",
 )
-@click.option(
-    "--key-auths", default=False, is_flag=True, help="Get all key-auth for the user."
-)
-@click.option(
-    "--plugins", default=False, is_flag=True, help="Get all plugins for the user."
-)
+@click.option("--key-auths", is_flag=True, help="Get all key-auth for the user.")
+@click.option("--plugins", is_flag=True, help="Get all plugins for the user.")
 @click.pass_context
 def retrieve(
     ctx: click.Context,

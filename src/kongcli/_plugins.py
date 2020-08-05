@@ -92,15 +92,11 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-basic-auth-on-{resource}")
     @click.option(
-        "--enabled",
-        type=bool,
-        default=True,
-        help="Whether this plugin will be applied.",
+        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
         "--hide_credentials",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="An optional boolean value telling the plugin to show or hide the credential from the upstream service. If `True`, the plugin will strip the credential from the request (i.e. the Authorization header) before proxying it.",
     )
     @click.option(
@@ -113,7 +109,7 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
     def enable_basic_auth(
         ctx: click.Context,
         id_name: str,
-        enabled: bool,
+        not_enabled: bool,
         hide_credentials: bool,
         anonymous: Optional[UUID],
     ) -> None:
@@ -127,7 +123,7 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
         tablefmt = ctx.obj["tablefmt"]
 
         payload: Dict[str, Any] = {
-            "enabled": enabled,
+            "enabled": not not_enabled,
             "config": {"hide_credentials": hide_credentials},
         }
         if anonymous:
@@ -220,10 +216,7 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-key-auth-on-{resource}")
     @click.option(
-        "--enabled",
-        type=bool,
-        default=True,
-        help="Whether this plugin will be applied.",
+        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
         "--key_names",
@@ -232,14 +225,12 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
     )
     @click.option(
         "--key_in_body",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="If enabled, the plugin will read the request body (if said request has one and its MIME type is supported) and try to find the key in it. Supported MIME types are `application/www-form-urlencoded`, `application/json`, and `multipart/form-data`.",
     )
     @click.option(
         "--hide_credentials",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="An optional boolean value telling the plugin to show or hide the credential from the upstream service. If `True`, the plugin will strip the credential from the request (i.e. the Authorization header) before proxying it.",
     )
     @click.option(
@@ -248,9 +239,8 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
         help="An optional string (consumer uuid) value to use as an “anonymous” consumer if authentication fails. If empty (default), the request will fail with an authentication failure 4xx. Please note that this value must refer to the Consumer `id` attribute which is internal to Kong, and not its `custom_id`.",
     )
     @click.option(
-        "--run_on_preflight",
-        type=bool,
-        default=True,
+        "--not_run_on_preflight",
+        is_flag=True,
         help="A boolean value that indicates whether the plugin should run (and try to authenticate) on `OPTIONS` preflight requests, if set to `false` then `OPTIONS` requests will always be allowed.",
     )
     @click.argument("id_name", required=resource != "global")
@@ -258,12 +248,12 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
     def enable_key_auth(
         ctx: click.Context,
         id_name: str,
-        enabled: bool,
+        not_enabled: bool,
         key_names: Tuple[str, ...],
         key_in_body: bool,
         hide_credentials: bool,
         anonymous: Optional[UUID],
-        run_on_preflight: bool,
+        not_run_on_preflight: bool,
     ) -> None:
         """Enable the key-auth plugin.
 
@@ -275,11 +265,11 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
         tablefmt = ctx.obj["tablefmt"]
 
         payload: Dict[str, Any] = {
-            "enabled": enabled,
+            "enabled": not not_enabled,
             "config": {
                 "hide_credentials": hide_credentials,
                 "key_in_body": key_in_body,
-                "run_on_preflight": run_on_preflight,
+                "run_on_preflight": not not_run_on_preflight,
             },
         }
         if anonymous:
@@ -313,10 +303,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-acl-on-{resource}")
     @click.option(
-        "--enabled",
-        type=bool,
-        default=True,
-        help="Whether this plugin will be applied.",
+        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
         "--white",
@@ -330,8 +317,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
     )
     @click.option(
         "--hide_groups_header",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="Flag which if enabled (true), prevents the `X-Consumer-Groups` header to be sent in the request to the upstream service. (ignored in 0.13.x)",
     )
     @click.argument("id_name", required=resource != "global")
@@ -339,7 +325,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
     def enable_acl(
         ctx: click.Context,
         id_name: str,
-        enabled: bool,
+        not_enabled: bool,
         white: Tuple[str, ...],
         black: Tuple[str, ...],
         hide_groups_header: bool,
@@ -358,7 +344,7 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
         tablefmt = ctx.obj["tablefmt"]
 
         payload: Dict[str, Any] = {
-            "enabled": enabled,
+            "enabled": not not_enabled,
             "config": {"hide_groups_header": hide_groups_header},
         }
         if white and black:
@@ -406,10 +392,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-rate-limiting-on-{resource}")
     @click.option(
-        "--enabled",
-        type=bool,
-        default=True,
-        help="Whether this plugin will be applied.",
+        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
         "--second",
@@ -454,15 +437,13 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
         help="The rate-limiting policies to use for retrieving and incrementing the limits. Available values are local (counters will be stored locally in-memory on the node), cluster (counters are stored in the datastore and shared across the nodes) and redis (counters are stored on a Redis server and will be shared across the nodes). In case of DB-less mode, at least one of local or redis must be specified. Please refer Implementation Considerations for details on which policy should be used.",
     )
     @click.option(
-        "--fault_tolerant",
-        type=bool,
-        default=True,
+        "--not-fault_tolerant",
+        is_flag=True,
         help="A boolean value that determines if the requests should be proxied even if Kong has troubles connecting a third-party datastore. If true requests will be proxied anyways effectively disabling the rate-limiting function until the datastore is working again. If false then the clients will see 500 errors.",
     )
     @click.option(
         "--hide_client_headers",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="Optionally hide informative response headers.",
     )
     @click.option(
@@ -498,7 +479,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
     def enable_rate_limit(
         ctx: click.Context,
         resource_id: str,
-        enabled: bool,
+        not_enabled: bool,
         second: Optional[int],
         minute: Optional[int],
         hour: Optional[int],
@@ -507,7 +488,7 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
         year: Optional[int],
         limit_by: str,
         policy: str,
-        fault_tolerant: bool,
+        not_fault_tolerant: bool,
         hide_client_headers: bool,
         redis_host: Optional[str],
         redis_port: int,
@@ -529,10 +510,10 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
         tablefmt = ctx.obj["tablefmt"]
 
         payload: Dict[str, Any] = {
-            "enabled": enabled,
+            "enabled": not not_enabled,
             "config": {
                 "hide_client_headers": hide_client_headers,
-                "fault_tolerant": fault_tolerant,
+                "fault_tolerant": not not_fault_tolerant,
                 "limit_by": limit_by,
                 "policy": policy,
             },
@@ -597,10 +578,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-response-ratelimiting-on-{resource}")
     @click.option(
-        "--enabled",
-        type=bool,
-        default=True,
-        help="Whether this plugin will be applied.",
+        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
         "--second",
@@ -646,8 +624,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
     )
     @click.option(
         "--block_on_first_violation",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="A boolean value that determines if the requests should be blocked as soon as one limit is being exceeded. This will block requests that are supposed to consume other limits too.",
     )
     @click.option(
@@ -663,15 +640,13 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
         help="The response-ratelimiting policies to use for retrieving and incrementing the limits. Available values are local (counters will be stored locally in-memory on the node), cluster (counters are stored in the datastore and shared across the nodes) and redis (counters are stored on a Redis server and will be shared across the nodes). In case of DB-less mode, at least one of local or redis must be specified. Please refer Implementation Considerations for details on which policy should be used.",
     )
     @click.option(
-        "--fault_tolerant",
-        type=bool,
-        default=True,
+        "--not-fault_tolerant",
+        is_flag=True,
         help="A boolean value that determines if the requests should be proxied even if Kong has troubles connecting a third-party datastore. If true requests will be proxied anyways effectively disabling the response-ratelimiting function until the datastore is working again. If false then the clients will see 500 errors.",
     )
     @click.option(
         "--hide_client_headers",
-        type=bool,
-        default=False,
+        is_flag=True,
         help="Optionally hide informative response headers.",
     )
     @click.option(
@@ -707,7 +682,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
     def enable_response_ratelimiting(
         ctx: click.Context,
         resource_id: str,
-        enabled: bool,
+        not_enabled: bool,
         second: Iterable[Tuple[str, int]],
         minute: Iterable[Tuple[str, int]],
         hour: Iterable[Tuple[str, int]],
@@ -718,7 +693,7 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
         block_on_first_violation: bool,
         limit_by: str,
         policy: str,
-        fault_tolerant: bool,
+        not_fault_tolerant: bool,
         hide_client_headers: bool,
         redis_host: Optional[str],
         redis_port: int,
@@ -754,10 +729,10 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
         tablefmt = ctx.obj["tablefmt"]
 
         payload: Dict[str, Any] = {
-            "enabled": enabled,
+            "enabled": not not_enabled,
             "config": {
                 "hide_client_headers": hide_client_headers,
-                "fault_tolerant": fault_tolerant,
+                "fault_tolerant": not not_fault_tolerant,
                 "limit_by": limit_by,
                 "policy": policy,
                 "header_name": header_name,
@@ -833,10 +808,7 @@ def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-request-size-limiting-on-{resource}")
     @click.option(
-        "--enabled",
-        type=bool,
-        default=True,
-        help="Whether this plugin will be applied.",
+        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
         "--allowed_payload_size",
@@ -847,7 +819,7 @@ def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
     @click.argument("id_name", required=resource != "global")
     @click.pass_context
     def request_size_limiting(
-        ctx: click.Context, id_name: str, enabled: bool, allowed_payload_size: int
+        ctx: click.Context, id_name: str, not_enabled: bool, allowed_payload_size: int
     ) -> None:
         """Enable the request-size-limiting plugin.
 
@@ -862,7 +834,7 @@ def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
         tablefmt = ctx.obj["tablefmt"]
 
         payload: Dict[str, Any] = {
-            "enabled": enabled,
+            "enabled": not not_enabled,
             "config": {"allowed_payload_size": allowed_payload_size},
         }
 

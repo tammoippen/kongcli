@@ -63,7 +63,7 @@ def raw(
         payload = dict_from_dot(data)
     if payload:
         payload = json_dumps(payload)
-        headers_dict['content-type'] = 'application/json'
+        headers_dict["content-type"] = "application/json"
         click.echo("> Body:", err=True)
         click.echo(f">{payload}", err=True)
 
