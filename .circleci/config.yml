@@ -15,7 +15,8 @@ commands:
             sudo -E docker-compose --project-name tests up -d
             sleep 10
             sudo docker run --network container:kong --rm -it \
-              tammoippen/kongcli:latest curl --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
+              --entrypoint curl \
+              tammoippen/kongcli:latest --retry 20 --retry-delay 1 --retry-connrefused http://localhost:8001/
       - run:
           name: Testing.
           command: |
@@ -26,7 +27,8 @@ commands:
                             -e HTTPBIN_HOST=httpbin \
                             -e HTTPBIN_PORT=80 \
                             -v $PWD:/app \
-                            tammoippen/kongcli:latest make ci
+                            --entrypoint make \
+                            tammoippen/kongcli:latest ci
       - run:
           name: Stop kong.
           when: always
@@ -36,7 +38,8 @@ commands:
           command: |
             sudo docker run --rm -it \
                             -v $PWD:/app \
-                            tammoippen/kongcli:latest poetry build -vvv -f sdist
+                            --entrypoint poetry \
+                            tammoippen/kongcli:latest build -vvv -f sdist
       - store_artifacts:
           path: ~/app/dist
           destination: dist
@@ -49,7 +52,8 @@ commands:
             sudo docker run --rm -it \
                             -v $PWD:/app \
                             -e COVERALLS_REPO_TOKEN=$COVERALLS_REPO_TOKEN \
-                            tammoippen/kongcli:latest make coveralls
+                            --entrypoint make \
+                            tammoippen/kongcli:latest coveralls
 
 executors:
   default:

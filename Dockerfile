@@ -1,4 +1,4 @@
-FROM python:3.6-slim
+FROM python:3.8-slim
 
 WORKDIR /app
 
@@ -13,14 +13,11 @@ RUN apt-get update && apt-get install -y curl make \
 
 ENV PATH=$VIRTUAL_ENV/bin:/root/.poetry/bin:$PATH
 
-COPY pyproject.toml ./
-RUN poetry install -n --no-dev \
- && rm -rf /root/.cache/pip
-
+COPY pyproject.toml poetry.lock* ./
 RUN poetry install -n --no-dev \
  && rm -rf /root/.cache/pip
 
 COPY . .
 RUN poetry install -n --no-dev
 
-CMD [ "poetry", "run", "kongcli" ]
+ENTRYPOINT [ "poetry", "run", "kongcli" ]
