@@ -1,13 +1,13 @@
 [![CircleCI](https://circleci.com/gh/tammoippen/kongcli.svg?style=svg)](https://circleci.com/gh/tammoippen/kongcli)
 [![Coverage Status](https://coveralls.io/repos/github/tammoippen/kongcli/badge.svg?branch=master)](https://coveralls.io/github/tammoippen/kongcli?branch=master)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/tammoippen/kongcli.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tammoippen/kongcli/context:python)
-![kong](https://img.shields.io/badge/kong-0.13%2C%200.14%2C%200.15%2C%201.0%2C%201.1%2C%201.2%2C%201.3-brightgreen)
+![kong](https://img.shields.io/badge/kong-0.13%2C%200.14%2C%200.15%2C%201.0%2C%201.1%2C%201.2%2C%201.3%2C%201.4%2C%201.5%2C%202.0%2C%202.1-brightgreen)
 [![PyPi version](https://img.shields.io/pypi/v/kongcli.svg)](https://pypi.python.org/pypi/kongcli)
 [![PyPi license](https://img.shields.io/pypi/l/kongcli.svg)](https://pypi.python.org/pypi/kongcli)
 
 # kongcli - cli for kong admin api
 
-*Note:* usable but still alpha quality - I will remove the alpha flag as soon as the coverage is above 90%.
+_Note:_ usable but still alpha quality - I will remove the alpha flag as soon as the coverage is above 90%.
 
 This is a command line interface (cli) to configure the awesome [kong](https://konghq.com/), especially using the [kong admin api](https://docs.konghq.com/1.3.x/admin-api/). There are alternatives like
 
@@ -17,20 +17,20 @@ This is a command line interface (cli) to configure the awesome [kong](https://k
 
 At work we use(d) a kong 0.13.x, hence the CLI's were either outdated or not ready. As with the GUI... it was to much overhead for my case. Then I collected some `*.http` files for the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client), but was never really satisfied with the 'UI'.
 
-I started this project for *my most used endpoints*, i.e. there is a lot of not-implemented endpoints - if you need them, consider the [`raw`](#raw) command or provide a PR ;) . I plan to make it compatible with **kong >= 0.13.x** - currently, CI tests with latest docker images for 0.13, 0.14, 0.15, 1.0, 1.1, 1.2 and 1.3.
+I started this project for _my most used endpoints_, i.e. there is a lot of not-implemented endpoints - if you need them, consider the [`raw`](#raw) command or provide a PR ;) . I plan to make it compatible with **kong >= 0.13.x** - currently, CI tests with latest docker images for 0.13, 0.14, 0.15, 1.0, 1.1, 1.2 and 1.3.
 
 ## installation
 
 > TBD - not yet published
 
 ```sh
-$ pip install kongcli
+> pip install kongcli
 ```
 
 or using [pipx](https://github.com/pipxproject/pipx):
 
 ```sh
-$ pipx install kongcli
+> pipx install kongcli
 ```
 
 ## usage
@@ -38,7 +38,7 @@ $ pipx install kongcli
 `kongcli` support `-h` / `--help` and documentation for the individual commands (along with documentation on [Kong Admin API](https://docs.konghq.com/1.3.x/admin-api/) for your kong version) should be sufficient to get most common operations done with ease:
 
 ```sh
-$ kongcli -h
+> kongcli -h
 Usage: kongcli [OPTIONS] COMMAND [ARGS]...
 
   Interact with your kong admin api.
@@ -83,7 +83,7 @@ Commands:
 If the endpoint / plugin / ... you need to configure is not implemented, you can always use curl or other means to submit a request to the kong admin api. The `raw` command should make it a bit easier:
 
 ```sh
-$ Usage: kongcli raw [OPTIONS] METHOD URL
+> Usage: kongcli raw [OPTIONS] METHOD URL
 
   Perform raw http requests to kong.
 
@@ -116,7 +116,7 @@ Options:
 If you provide the base url and authentication via environment variables, requests to kong admin api via `raw` are like:
 
 ```sh
-$ kongcli raw GET /
+> kongcli raw GET /
 > GET http://localhost:8001/
 > User-Agent: python-requests/2.22.0
 > Accept-Encoding: gzip, deflate
@@ -139,7 +139,7 @@ $ kongcli raw GET /
 The objects consumers, services, routes, plugins all have a 'similar' create, read, update, delete (CRUD) interface. For consumers the commands are as follows, but the others are similar:
 
 ```sh
-$ kongcli consumers -h
+> kongcli consumers -h
 Usage: kongcli consumers [OPTIONS] COMMAND [ARGS]...
 
   Manage Consumers Objects.
@@ -169,24 +169,24 @@ Commands:
 - Tables are printed using [`tabulate`](https://github.com/astanin/python-tabulate) - other formats can be selected via the `--tablefmt TEXT` option from `kongcli`.
 - Headers are printed using [`pyfiglet`](https://github.com/pwaller/pyfiglet) - other fonts can be selected via the `--font TEXT` option from `kongcli` (see [http://www.figlet.org/examples.html](http://www.figlet.org/examples.html) for examples).
 - logs can be shown using the `-v` / `--verbose` option from `kongcli`:
-    - zero `-v` will show ERROR only
-    - `-v` will show WARNING logs and above
-    - `-vv` will show INFO and above
-    - `-vvv` will show DEBUG and above
+  - zero `-v` will show ERROR only
+  - `-v` will show WARNING logs and above
+  - `-vv` will show INFO and above
+  - `-vvv` will show DEBUG and above
 
 ## examples
 
 CRUD on a consumer:
 
 ```sh
-$ kongcli consumers create --username foobar
+> kongcli consumers create --username foobar
 ╒═══════════════════════════╤══════════════════════════════════════╤════════════╕
 │ created_at                │ id                                   │ username   │
 ╞═══════════════════════════╪══════════════════════════════════════╪════════════╡
 │ 2019-10-14 16:54:53+00:00 │ f4203001-c3de-4ab9-ad26-6f4ca0306ea8 │ foobar     │
 ╘═══════════════════════════╧══════════════════════════════════════╧════════════╛
 
-$ kongcli consumers list  # to get all consumers
+> kongcli consumers list  # to get all consumers
  #####
 #     #  ####  #    #  ####  #    # #    # ###### #####   ####
 #       #    # ##   # #      #    # ##  ## #      #    # #
@@ -200,21 +200,21 @@ $ kongcli consumers list  # to get all consumers
 │ f4203001-c3de-4ab9-ad26-6f4ca0306ea8 │             │ foobar     │              │           │              │            │
 ╘══════════════════════════════════════╧═════════════╧════════════╧══════════════╧═══════════╧══════════════╧════════════╛
 
-$ kongcli consumers retrieve foobar  # to get a specific consumer
+> kongcli consumers retrieve foobar  # to get a specific consumer
 ╒═══════════════════════════╤══════════════════════════════════════╤════════════╕
 │ created_at                │ id                                   │ username   │
 ╞═══════════════════════════╪══════════════════════════════════════╪════════════╡
 │ 2019-10-14 16:54:53+00:00 │ f4203001-c3de-4ab9-ad26-6f4ca0306ea8 │ foobar     │
 ╘═══════════════════════════╧══════════════════════════════════════╧════════════╛
 
-$ kongcli consumers update foobar --custom_id 1234
+> kongcli consumers update foobar --custom_id 1234
 ╒═══════════════╤═════════════╤══════════════════════════════════════╤════════════╕
 │    created_at │   custom_id │ id                                   │ username   │
 ╞═══════════════╪═════════════╪══════════════════════════════════════╪════════════╡
 │ 1571072093000 │        1234 │ f4203001-c3de-4ab9-ad26-6f4ca0306ea8 │ foobar     │
 ╘═══════════════╧═════════════╧══════════════════════════════════════╧════════════╛
 
-$ kongcli consumers delete foobar
+> kongcli consumers delete foobar
 Deleted consumer `foobar`!
 ```
 
@@ -224,18 +224,17 @@ The project still needs some love. If you want to contribute, please consider th
 
 - We cannot know, which version of kong somebody is stuck with - please make your contributions compatible with 0.13+. If there is a new feature not supported downwards, please do not attempt to contribute it. Also, do not contribute deprecated API, e.g. [API Objects](https://docs.konghq.com/0.13.x/admin-api/#api-object) etc. .
 - make sure CI will most likely pass, e.g.:
-    - static tests: `make statics`
-    - pytests: `make tests`
-    - try at least one or two different kong versions locally
+  - static tests: `make statics`
+  - pytests: `make tests`
+  - try at least one or two different kong versions locally
 - if you want to contribute new endpoints, please only provide endpoints you are actually using a lot - the more specific endpoints we support, the more maintenance work has to be done.
 - i really would like it, if you just use the cli, report your bugs here, brag about how great it is on twitter, facebook, hackernews, reddit, ...
-
 
 ### start local development kong
 
 The provided `docker-compose.yml` is able to start and setup different kong versions for local development (one at a time). In `.testenv`, change the `KONG_VERSION_TAG` and `KONG_MIGRATION_CMD` (`< 0.15` use `up`, `>= 0.15` use `bootstrap`). Then source the file, e.g. `export $(cat .testenv | xargs)`. Start the docker-compose with:
 
 ```sh
-$ docker-compose down -v
-$ docker-compose --project-name tests up -d
+> docker-compose down -v
+> docker-compose --project-name tests up -d
 ```
