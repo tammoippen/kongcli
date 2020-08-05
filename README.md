@@ -56,14 +56,17 @@ Options:
   --basic TEXT     Basic auth username for kong.
   --passwd TEXT    Basic auth password for kong. Is also prompted, if left
                    out.
+
   --tablefmt TEXT  Format for the output tables. Supported formats:
                    fancy_grid, github, grid, html, jira, latex,
                    latex_booktabs, latex_raw, mediawiki, moinmoin, orgtbl,
-                   pipe, plain, presto, psql, rst, simple, textile, tsv,
-                   youtrack  [default: fancy_grid]
+                   pipe, plain, presto, pretty, psql, rst, simple, textile,
+                   tsv, youtrack  [default: fancy_grid]
+
   --font TEXT      Font for the table headers. See
                    http://www.figlet.org/examples.html for examples.
                    [default: banner]
+
   -v, --verbose    Add more verbose output.  [default: 0]
   -h, --help       Show this message and exit.
 
@@ -76,6 +79,7 @@ Commands:
   routes     Manage Routes Objects.
   services   Manage Service Objects.
   version    Show version of kongcli.
+
 ```
 
 ### raw
@@ -83,7 +87,8 @@ Commands:
 If the endpoint / plugin / ... you need to configure is not implemented, you can always use curl or other means to submit a request to the kong admin api. The `raw` command should make it a bit easier:
 
 ```sh
-> Usage: kongcli raw [OPTIONS] METHOD URL
+> kongcli raw -h
+Usage: kongcli raw [OPTIONS] METHOD URL
 
   Perform raw http requests to kong.
 
@@ -153,15 +158,18 @@ Options:
   -h, --help  Show this message and exit.
 
 Commands:
-  add-groups     Add the given groups to the consumer.
-  basic-auth     Manage basic auths of Consumer Objects.
-  create         Create a user / consumer of your services / routes.
-  delete         Delete a consumer with all associated plugins / acls etc.
-  delete-groups  Delete the given groups from the consumer.
-  key-auth       Manage key auths of Consumer Objects.
-  list           List all consumers along with relevant information.
-  retrieve       Retrieve a specific consumer.
-  update         Update a consumer.
+  add-groups                    Add the given groups to the consumer.
+  basic-auth                    Manage basic auths of Consumer Objects.
+  create                        Create a user / consumer of your services /...
+  delete                        Delete a consumer with all associated...
+  delete-groups                 Delete the given groups from the consumer.
+  enable-rate-limiting          Enable the rate-limiting plugin.
+  enable-request-size-limiting  Enable the request-size-limiting plugin.
+  enable-response-ratelimiting  Enable the response-ratelimiting plugin.
+  key-auth                      Manage key auths of Consumer Objects.
+  list                          List all consumers along with relevant...
+  retrieve                      Retrieve a specific consumer.
+  update                        Update a consumer.
 ```
 
 ## UI
