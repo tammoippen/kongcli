@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 import pytest
@@ -221,7 +221,7 @@ def test_create(invoke, clean_kong, username, custom):
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")]
-    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now() + timedelta(seconds=1)
     assert values[2] == "" if custom is None else custom
     assert UUID(values[3])
     assert values[4] == ""
@@ -544,7 +544,7 @@ def test_key_auth_lists_some(invoke, sample, session):
     for line in lines[3:8]:
         values = [v.strip() for v in line.split("|")][1:-1]
         assert values[0] == consumer["id"]
-        assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+        assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now() + timedelta(seconds=1)
         id_ = values[2]
         key = next(k for k in keys if k["id"] == id_)
         assert key["key"] == values[3]
@@ -578,7 +578,7 @@ def test_key_auth_add(invoke, sample, session):
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
     assert values[0] == consumer["id"]
-    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now() + timedelta(seconds=1)
     id_ = values[2]
     keys = consumers.key_auths(session, consumer["id"])
     key = next(k for k in keys if k["id"] == id_)
@@ -641,7 +641,7 @@ def test_key_auth_update(invoke, sample, session):
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
     assert values[0] == consumer["id"]
-    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now() + timedelta(seconds=1)
     id_ = values[2]
     keys = consumers.key_auths(session, consumer["id"])
     key = next(k for k in keys if k["id"] == id_)
@@ -692,7 +692,7 @@ def test_basic_auth_lists_some(invoke, sample, session):
     for line in lines[3:8]:
         values = [v.strip() for v in line.split("|")][1:-1]
         assert values[0] == consumer["id"]
-        assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+        assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()  + timedelta(seconds=1)
         id_ = values[2]
         ba = next(k for k in bas if k["id"] == id_)
         assert ba["password"] == values[3]
@@ -732,7 +732,7 @@ def test_basic_auth_add(invoke, sample, session):
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
     assert values[0] == consumer["id"]
-    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()  + timedelta(seconds=1)
     id_ = values[2]
     bas = consumers.basic_auths(session, consumer["id"])
     ba = next(k for k in bas if k["id"] == id_)
@@ -804,7 +804,7 @@ def test_basic_auth_update(invoke, sample, session, username, passwd):
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
     assert values[0] == consumer["id"]
-    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now() + timedelta(seconds=1)
     id_ = values[2]
     bas = consumers.basic_auths(session, consumer["id"])
     ba = next(k for k in bas if k["id"] == id_)
