@@ -13,7 +13,7 @@ from ._routes import list_routes, routes_cli
 from ._services import list_services, services_cli
 from ._session import LiveServerSession
 from ._util import get, json_pretty
-from .kong.general import information
+from .kong.general import information, status_call
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -99,6 +99,14 @@ cli.add_command(raw)
 def info(ctx: click.Context) -> None:
     """Show information on the kong instance."""
     info = get("information", lambda: information(ctx.obj["session"]))
+    click.echo(json_pretty(info))
+
+
+@cli.command()
+@click.pass_context
+def status(ctx: click.Context) -> None:
+    """Show status information on the kong instance."""
+    info = get("status", lambda: status_call(ctx.obj["session"]))
     click.echo(json_pretty(info))
 
 

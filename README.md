@@ -78,8 +78,8 @@ Commands:
   raw        Perform raw http requests to kong.
   routes     Manage Routes Objects.
   services   Manage Service Objects.
+  status     Show status information on the kong instance.
   version    Show version of kongcli.
-
 ```
 
 ### raw

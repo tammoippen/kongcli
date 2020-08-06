@@ -16,6 +16,14 @@ def information(session: requests.Session) -> Dict[str, Any]:
     return data
 
 
+def status_call(session: requests.Session) -> Dict[str, Any]:
+    logger.debug("Collecting status information about kong ...")
+    resp = session.get("/status")
+    _check_resp(resp)
+    data: Dict[str, Any] = resp.json()
+    return data
+
+
 def all_of(resource: str, session: requests.Session) -> List[Dict[str, Any]]:
     assert resource in (
         "consumers",

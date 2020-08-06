@@ -9,6 +9,12 @@ def test_info(invoke):
     assert re.match(r"[01]\.\d+(\.\d+)?", json.loads(result.output)["version"])
 
 
+def test_status(invoke):
+    result = invoke(["status"])
+    assert result.exit_code == 0
+    assert json.loads(result.output)["database"]["reachable"]
+
+
 def test_version(invoke):
     result = invoke(["version"])
     assert result.exit_code == 0
