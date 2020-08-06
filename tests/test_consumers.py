@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
-import json
+from datetime import datetime
 from uuid import UUID
 
 import pytest
 
+from kongcli._util import parse_datetimes
 from kongcli.kong import consumers, general, plugins
 
 
@@ -56,6 +56,8 @@ def test_list_single_empty(invoke, sample):
 def test_list_two_filled(invoke, sample, session, full_keys):
     service, route, consumer1 = sample
     consumer2 = general.add("consumers", session, username="foobar2", custom_id="4321")
+    parse_datetimes(consumer2)
+
     for idx, consumer in enumerate((consumer1, consumer2)):
         consumers.add_group(session, consumer["id"], "group2")
         consumers.add_group(session, consumer["id"], "group1")
@@ -125,7 +127,7 @@ def test_list_two_plugins(invoke, sample, session, full_plugins):
 
     assert result.exit_code == 0
     lines = result.output.split("\n")
-    assert len(lines) == 46 if full_plugins else 11
+    assert len(lines) >= 32 if full_plugins else 11
     assert [v.strip() for v in lines[6].split("|")] == [
         "",
         "id",
@@ -149,12 +151,15 @@ def test_list_two_plugins(invoke, sample, session, full_plugins):
         "",
     ]
     if full_plugins:
-        rest = [line.split("|")[5].strip() for line in lines[9:26]]
-        assert rest[0] == "{"
-        assert rest[6] == '"minute": 20,'
-        assert rest[-1] == "}"
+        rest = [[elem.strip() for elem in line.split("|")] for line in lines[9:]]
+        second_id_line = [
+            idx
+            for idx, line in enumerate(rest)
+            if len(line) >= 2 and line[1] == consumer2["id"]
+        ][0]
+        assert any(line[5] == '"minute": 20,' for line in rest[:second_id_line])
 
-        assert [v.strip() for v in lines[26].split("|")] == [
+        assert rest[second_id_line] == [
             "",
             consumer2["id"],
             consumer2["custom_id"],
@@ -165,10 +170,8 @@ def test_list_two_plugins(invoke, sample, session, full_plugins):
             "",
             "",
         ]
-        rest = [line.split("|")[5].strip() for line in lines[27:44]]
-        assert rest[0] == "{"
-        assert rest[6] == '"minute": 20,'
-        assert rest[-1] == "}"
+        assert any(line[5] == '"minute": 20,' for line in rest[second_id_line:])
+
     else:
         assert [v.strip() for v in lines[9].split("|")] == [
             "",
@@ -218,7 +221,7 @@ def test_create(invoke, clean_kong, username, custom):
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")]
-    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
     assert values[2] == "" if custom is None else custom
     assert UUID(values[3])
     assert values[4] == ""
@@ -332,7 +335,7 @@ def test_retrive(invoke, sample, session, acls, ba, ka, pl):
     values = [
         [v.strip() for v in line.split("|")] for line in result.output.split("\n")
     ]
-    assert values[1][:6] == ["", "custom_id", "created_at", "id", "tags", "username"]
+    assert values[1][:6] == ["", "created_at", "custom_id", "id", "tags", "username"]
     rest = values[1][6:]
     if acls:
         assert rest.pop(0) == "acls"
@@ -345,8 +348,8 @@ def test_retrive(invoke, sample, session, acls, ba, ka, pl):
 
     assert values[3][:6] == [
         "",
+        consumer["created_at"].isoformat(),
         consumer["custom_id"],
-        datetime.fromtimestamp(consumer["created_at"], tz=timezone.utc).isoformat(" "),
         consumer["id"],
         "",
         consumer["username"],
@@ -408,8 +411,8 @@ def test_add_groups_multiple(invoke, sample):
     ]
     assert values[1] == [
         "",
-        "custom_id",
         "created_at",
+        "custom_id",
         "id",
         "tags",
         "username",
@@ -418,8 +421,8 @@ def test_add_groups_multiple(invoke, sample):
     ]
     assert values[3] == [
         "",
+        consumer["created_at"].isoformat(),
         consumer["custom_id"],
-        datetime.fromtimestamp(consumer["created_at"], tz=timezone.utc).isoformat(" "),
         consumer["id"],
         "",
         consumer["username"],
@@ -469,8 +472,8 @@ def test_delete_groups_multiple(invoke, sample, session):
     ]
     assert values[1] == [
         "",
-        "custom_id",
         "created_at",
+        "custom_id",
         "id",
         "tags",
         "username",
@@ -479,8 +482,8 @@ def test_delete_groups_multiple(invoke, sample, session):
     ]
     assert values[3] == [
         "",
+        consumer["created_at"].isoformat(),
         consumer["custom_id"],
-        datetime.fromtimestamp(consumer["created_at"], tz=timezone.utc).isoformat(" "),
         consumer["id"],
         "",
         consumer["username"],
@@ -498,7 +501,7 @@ def test_delete(invoke, sample, session):
     with pytest.raises(Exception) as e:
         general.retrieve("consumers", session, consumer["id"])
 
-    assert str(e.value) == '404 Not Found: {"message":"Not found"}'
+    assert str(e.value).strip() == '404 Not Found: {"message":"Not found"}'
 
 
 def test_key_auth_lists_none(invoke, sample):
@@ -532,7 +535,7 @@ def test_key_auth_lists_some(invoke, sample, session):
     assert len(lines) == 10
     assert [v.strip() for v in lines[1].split("|")] == [
         "",
-        "consumer",
+        "consumer.id",
         "created_at",
         "id",
         "key",
@@ -540,8 +543,8 @@ def test_key_auth_lists_some(invoke, sample, session):
     ]
     for line in lines[3:8]:
         values = [v.strip() for v in line.split("|")][1:-1]
-        assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
-        assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+        assert values[0] == consumer["id"]
+        assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
         id_ = values[2]
         key = next(k for k in keys if k["id"] == id_)
         assert key["key"] == values[3]
@@ -567,15 +570,15 @@ def test_key_auth_add(invoke, sample, session):
     assert len(lines) == 6
     assert [v.strip() for v in lines[1].split("|")] == [
         "",
-        "consumer",
+        "consumer.id",
         "created_at",
         "id",
         "key",
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
-    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
-    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    assert values[0] == consumer["id"]
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
     id_ = values[2]
     keys = consumers.key_auths(session, consumer["id"])
     key = next(k for k in keys if k["id"] == id_)
@@ -630,15 +633,15 @@ def test_key_auth_update(invoke, sample, session):
     assert len(lines) == 6
     assert [v.strip() for v in lines[1].split("|")] == [
         "",
-        "consumer",
+        "consumer.id",
         "created_at",
         "id",
         "key",
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
-    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
-    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    assert values[0] == consumer["id"]
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
     id_ = values[2]
     keys = consumers.key_auths(session, consumer["id"])
     key = next(k for k in keys if k["id"] == id_)
@@ -679,7 +682,7 @@ def test_basic_auth_lists_some(invoke, sample, session):
     assert len(lines) == 10
     assert [v.strip() for v in lines[1].split("|")] == [
         "",
-        "consumer",
+        "consumer.id",
         "created_at",
         "id",
         "password",
@@ -688,8 +691,8 @@ def test_basic_auth_lists_some(invoke, sample, session):
     ]
     for line in lines[3:8]:
         values = [v.strip() for v in line.split("|")][1:-1]
-        assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
-        assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+        assert values[0] == consumer["id"]
+        assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
         id_ = values[2]
         ba = next(k for k in bas if k["id"] == id_)
         assert ba["password"] == values[3]
@@ -720,7 +723,7 @@ def test_basic_auth_add(invoke, sample, session):
     assert len(lines) == 6
     assert [v.strip() for v in lines[1].split("|")] == [
         "",
-        "consumer",
+        "consumer.id",
         "created_at",
         "id",
         "password",
@@ -728,8 +731,8 @@ def test_basic_auth_add(invoke, sample, session):
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
-    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
-    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    assert values[0] == consumer["id"]
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
     id_ = values[2]
     bas = consumers.basic_auths(session, consumer["id"])
     ba = next(k for k in bas if k["id"] == id_)
@@ -792,7 +795,7 @@ def test_basic_auth_update(invoke, sample, session, username, passwd):
     assert len(lines) == 6
     assert [v.strip() for v in lines[1].split("|")] == [
         "",
-        "consumer",
+        "consumer.id",
         "created_at",
         "id",
         "password",
@@ -800,8 +803,8 @@ def test_basic_auth_update(invoke, sample, session, username, passwd):
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
-    assert json.loads(values[0].replace("'", '"')) == {"id": consumer["id"]}
-    assert datetime.strptime(values[1], "%Y-%m-%d %H:%M:%S+00:00") <= datetime.now()
+    assert values[0] == consumer["id"]
+    assert datetime.strptime(values[1], "%Y-%m-%dT%H:%M:%S+00:00") <= datetime.now()
     id_ = values[2]
     bas = consumers.basic_auths(session, consumer["id"])
     ba = next(k for k in bas if k["id"] == id_)

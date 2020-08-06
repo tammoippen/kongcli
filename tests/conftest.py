@@ -8,7 +8,7 @@ import pytest
 
 from kongcli._cli import cli
 from kongcli._session import LiveServerSession
-from kongcli._util import _reset_cache
+from kongcli._util import _reset_cache, parse_datetimes
 from kongcli.kong.general import add, information
 
 
@@ -84,7 +84,10 @@ def kong_version(session):
 @pytest.fixture()
 def sample(clean_kong, session, httpbin):
     service = add("services", session, name="httpbin", url=httpbin)
+    parse_datetimes(service)
     route = add("routes", session, service={"id": service["id"]}, paths=["/httpbin"])
+    parse_datetimes(route)
     consumer = add("consumers", session, username="foobar", custom_id="1234")
+    parse_datetimes(consumer)
 
     return service, route, consumer

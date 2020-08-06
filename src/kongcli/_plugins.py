@@ -7,7 +7,7 @@ from loguru import logger
 from pyfiglet import print_figlet
 from tabulate import tabulate
 
-from ._util import get, json_pretty, parse_datetimes
+from ._util import get, json_pretty, parse_datetimes, sort_dict, substitude_ids
 from .kong import general, plugins
 
 
@@ -25,10 +25,12 @@ def list_global_plugins(ctx: click.Context) -> None:
 
     data = []
     for p in plugins:
+        substitude_ids(p)
+        p = sort_dict(p)
         if (
-            p.get("route_id") is None
-            and p.get("service_id") is None
-            and p.get("consumer_id") is None
+            p.get("route.id") is None
+            and p.get("service.id") is None
+            and p.get("consumer.id") is None
         ):
             p["config"] = json_pretty(p["config"])
             parse_datetimes(p)
@@ -55,15 +57,17 @@ def list_plugins(ctx: click.Context) -> None:
     consumers = get("consumers", lambda: general.all_of("consumers", session))
 
     for p in plugins:
+        substitude_ids(p)
+        p = sort_dict(p)
         p["config"] = json_pretty(p["config"])
         parse_datetimes(p)
-        service_id = p.get("service_id")
+        service_id = p.get("service.id")
         if service_id:
             for s in services:
                 if s["id"] == service_id:
                     p["service_name"] = s["name"]
                     break
-        consumer_id = p.get("consumer_id")
+        consumer_id = p.get("consumer.id")
         if consumer_id:
             for c in consumers:
                 if c["id"] == consumer_id:
@@ -138,6 +142,8 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        substitude_ids(plugin)
+        plugin = sort_dict(plugin)
         plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
@@ -207,6 +213,8 @@ def update_basic_auth(
         payload["name"] = "basic-auth"
         plugin = general.update("plugins", session, str(plugin_id), **payload)
     parse_datetimes(plugin)
+    substitude_ids(plugin)
+    plugin = sort_dict(plugin)
     plugin["config"] = json_pretty(plugin["config"])
     click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
@@ -286,6 +294,8 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        substitude_ids(plugin)
+        plugin = sort_dict(plugin)
         plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
@@ -375,6 +385,8 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        substitude_ids(plugin)
+        plugin = sort_dict(plugin)
         plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
@@ -560,6 +572,8 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        substitude_ids(plugin)
+        plugin = sort_dict(plugin)
         plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
@@ -782,6 +796,8 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        substitude_ids(plugin)
+        plugin = sort_dict(plugin)
         plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 
@@ -847,6 +863,8 @@ def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
             plugin = general.add("plugins", session, **payload)
 
         parse_datetimes(plugin)
+        substitude_ids(plugin)
+        plugin = sort_dict(plugin)
         plugin["config"] = json_pretty(plugin["config"])
         click.echo(tabulate([plugin], headers="keys", tablefmt=tablefmt))
 

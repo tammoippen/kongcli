@@ -82,3 +82,14 @@ def json_pretty(obj: Any) -> str:
 
 def json_loads(sobj: str) -> Any:
     return orjson.loads(sobj)
+
+
+def substitude_ids(obj: Dict[str, Any]) -> None:
+    for key in ("consumer", "route", "service"):
+        if key in obj:
+            # version 1. sets `consumer` to none, if not assigned to a consumer
+            if "id" in obj[key]:
+                obj[f"{key}.id"] = obj[key]["id"]
+            obj.pop(key)
+        elif f"{key}_id" in obj:
+            obj[f"{key}.id"] = obj.pop(f"{key}_id")

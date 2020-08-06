@@ -10,7 +10,7 @@ from ._plugins import (
     enable_request_size_limiting_consumers,
     enable_response_ratelimiting_consumers,
 )
-from ._util import get, json_pretty, parse_datetimes, sort_dict
+from ._util import get, json_pretty, parse_datetimes, sort_dict, substitude_ids
 from .kong import consumers, general
 
 
@@ -48,22 +48,23 @@ def list_consumers(ctx: click.Context, full_keys: bool, full_plugins: bool) -> N
             "key_auth": set(),
         }
         for a in acls:
-            if c["id"] in (a.get("consumer_id"), a.get("consumer", {}).get("id")):
+            substitude_ids(a)
+            if c["id"] == a.get("consumer.id"):
                 cdata["acl_groups"] |= {a["group"]}
         for p in plugins:
-            if p.get("consumer", {}) is None:
-                # version 1. sets `consumer` to none, if not assigned to a consumer
-                continue
-            if c["id"] in (p.get("consumer_id"), p.get("consumer", {}).get("id")):
+            substitude_ids(p)
+            if c["id"] == p.get("consumer.id"):
                 if full_plugins:
                     cdata["plugins"] += [(p["name"], p["config"])]
                 else:
                     cdata["plugins"] += [p["name"]]
         for b in basic_auths:
-            if c["id"] in (b.get("consumer_id"), b.get("consumer", {}).get("id")):
+            substitude_ids(b)
+            if c["id"] == b.get("consumer.id"):
                 cdata["basic_auth"] |= {f'{b["username"]}:xxx'}
         for k in key_auths:
-            if c["id"] in (k.get("consumer_id"), k.get("consumer", {}).get("id")):
+            substitude_ids(k)
+            if c["id"] == k.get("consumer.id"):
                 key = k["key"]
                 if not full_keys:
                     key = f"{key[:6]}..."
@@ -109,8 +110,11 @@ def create(
     tablefmt = ctx.obj["tablefmt"]
 
     user = general.add("consumers", session, username=username, custom_id=custom_id)
-    user = sort_dict(user)
+    for k in ("tags", "username", "custom_id", "created_at"):
+        if k not in user:
+            user[k] = None
     parse_datetimes(user)
+    user = sort_dict(user)
     click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
 
@@ -137,8 +141,11 @@ def retrieve(
     tablefmt = ctx.obj["tablefmt"]
 
     user = general.retrieve("consumers", session, id_username)
-    sort_dict(user)
+    for k in ("tags", "username", "custom_id", "created_at"):
+        if k not in user:
+            user[k] = None
     parse_datetimes(user)
+    user = sort_dict(user)
 
     if acls:
         user["acls"] = "\n".join(sorted(consumers.groups(session, id_username)))
@@ -250,6 +257,9 @@ def update(
         raise click.Abort()
 
     user = general.update("consumers", session, id_username, **payload)
+    for k in ("tags", "username", "custom_id", "created_at"):
+        if k not in user:
+            user[k] = None
     user = sort_dict(user)
     click.echo(tabulate([user], headers="keys", tablefmt=tablefmt))
 
@@ -296,9 +306,10 @@ def list_key_auths(ctx: click.Context, id_username: str) -> None:
     tablefmt = ctx.obj["tablefmt"]
 
     key_auths = consumers.key_auths(session, id_username)
+    for ka in key_auths:
+        parse_datetimes(ka)
+        substitude_ids(ka)
     key_auths = sort_dict(key_auths)
-    for key in key_auths:
-        parse_datetimes(key)
     click.echo(tabulate(key_auths, headers="keys", tablefmt=tablefmt))
 
 
@@ -319,8 +330,9 @@ def add_key_auth(ctx: click.Context, id_username: str, key: Optional[str]) -> No
     tablefmt = ctx.obj["tablefmt"]
 
     key_auth = consumers.add_key_auth(session, id_username, key)
-    key_auth = sort_dict(key_auth)
     parse_datetimes(key_auth)
+    substitude_ids(key_auth)
+    key_auth = sort_dict(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
 
@@ -349,8 +361,9 @@ def update_key_auth(
     tablefmt = ctx.obj["tablefmt"]
 
     key_auth = consumers.update_key_auth(session, id_username, str(key_id), new_key)
-    key_auth = sort_dict(key_auth)
     parse_datetimes(key_auth)
+    substitude_ids(key_auth)
+    key_auth = sort_dict(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
 
@@ -369,9 +382,10 @@ def list_basic_auths(ctx: click.Context, id_username: str) -> None:
     tablefmt = ctx.obj["tablefmt"]
 
     basic_auths = consumers.basic_auths(session, id_username)
+    for ba in basic_auths:
+        parse_datetimes(ba)
+        substitude_ids(ba)
     basic_auths = sort_dict(basic_auths)
-    for key in basic_auths:
-        parse_datetimes(key)
     click.echo(tabulate(basic_auths, headers="keys", tablefmt=tablefmt))
 
 
@@ -390,8 +404,9 @@ def add_basic_auth(
     tablefmt = ctx.obj["tablefmt"]
 
     basic_auth = consumers.add_basic_auth(session, id_username, username, password)
-    basic_auth = sort_dict(basic_auth)
     parse_datetimes(basic_auth)
+    substitude_ids(basic_auth)
+    basic_auth = sort_dict(basic_auth)
     click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
 
 
@@ -439,6 +454,7 @@ def update_basic_auth(
     basic_auth = consumers.update_basic_auth(
         session, id_username, str(basic_auth_id), username, password
     )
-    basic_auth = sort_dict(basic_auth)
     parse_datetimes(basic_auth)
+    substitude_ids(basic_auth)
+    basic_auth = sort_dict(basic_auth)
     click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
