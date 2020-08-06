@@ -1,4 +1,4 @@
-version: '2.1'
+version: '2.4'
 
 services:
   httpbin:
@@ -29,7 +29,7 @@ services:
       KONG_PG_PASSWORD: ${KONG_PG_PASSWORD:-kong}
       KONG_PG_USER: ${KONG_PG_USER:-kong}
       KONG_PG_DATABASE: ${KONG_PG_DATABASE:-kong}
-    command: kong migrations ${KONG_MIGRATION_CMD:-up}  # on 0.15.* 1.* it is bootstrap
+    command: kong migrations ${KONG_MIGRATION_CMD:-bootstrap}  # on <0.15 use up
     restart: on-failure
     depends_on:
       database:
