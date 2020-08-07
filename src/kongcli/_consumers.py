@@ -309,6 +309,9 @@ def list_key_auths(ctx: click.Context, id_username: str) -> None:
     for ka in key_auths:
         parse_datetimes(ka)
         substitude_ids(ka)
+        for k in ("tags", "ttl"):
+            if k not in ka:
+                ka[k] = None
     key_auths = sort_dict(key_auths)
     click.echo(tabulate(key_auths, headers="keys", tablefmt=tablefmt))
 
@@ -332,6 +335,9 @@ def add_key_auth(ctx: click.Context, id_username: str, key: Optional[str]) -> No
     key_auth = consumers.add_key_auth(session, id_username, key)
     parse_datetimes(key_auth)
     substitude_ids(key_auth)
+    for k in ("tags", "ttl"):
+        if k not in key_auth:
+            key_auth[k] = None
     key_auth = sort_dict(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
@@ -363,6 +369,9 @@ def update_key_auth(
     key_auth = consumers.update_key_auth(session, id_username, str(key_id), new_key)
     parse_datetimes(key_auth)
     substitude_ids(key_auth)
+    for k in ("tags", "ttl"):
+        if k not in key_auth:
+            key_auth[k] = None
     key_auth = sort_dict(key_auth)
     click.echo(tabulate([key_auth], headers="keys", tablefmt=tablefmt))
 
@@ -385,6 +394,9 @@ def list_basic_auths(ctx: click.Context, id_username: str) -> None:
     for ba in basic_auths:
         parse_datetimes(ba)
         substitude_ids(ba)
+        for k in ("tags",):
+            if k not in ba:
+                ba[k] = None
     basic_auths = sort_dict(basic_auths)
     click.echo(tabulate(basic_auths, headers="keys", tablefmt=tablefmt))
 
@@ -406,6 +418,9 @@ def add_basic_auth(
     basic_auth = consumers.add_basic_auth(session, id_username, username, password)
     parse_datetimes(basic_auth)
     substitude_ids(basic_auth)
+    for k in ("tags",):
+        if k not in basic_auth:
+            basic_auth[k] = None
     basic_auth = sort_dict(basic_auth)
     click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))
 
@@ -456,5 +471,8 @@ def update_basic_auth(
     )
     parse_datetimes(basic_auth)
     substitude_ids(basic_auth)
+    for k in ("tags",):
+        if k not in basic_auth:
+            basic_auth[k] = None
     basic_auth = sort_dict(basic_auth)
     click.echo(tabulate([basic_auth], headers="keys", tablefmt=tablefmt))

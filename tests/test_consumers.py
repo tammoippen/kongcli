@@ -541,6 +541,8 @@ def test_key_auth_lists_some(invoke, sample, session):
         "created_at",
         "id",
         "key",
+        "tags",
+        "ttl",
         "",
     ]
     for line in lines[3:8]:
@@ -578,6 +580,8 @@ def test_key_auth_add(invoke, sample, session):
         "created_at",
         "id",
         "key",
+        "tags",
+        "ttl",
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
@@ -643,6 +647,8 @@ def test_key_auth_update(invoke, sample, session):
         "created_at",
         "id",
         "key",
+        "tags",
+        "ttl",
         "",
     ]
     values = [v.strip() for v in lines[3].split("|")][1:-1]
@@ -694,6 +700,7 @@ def test_basic_auth_lists_some(invoke, sample, session):
         "created_at",
         "id",
         "password",
+        "tags",
         "username",
         "",
     ]
@@ -706,7 +713,7 @@ def test_basic_auth_lists_some(invoke, sample, session):
         id_ = values[2]
         ba = next(k for k in bas if k["id"] == id_)
         assert ba["password"] == values[3]
-        assert ba["username"] == values[4]
+        assert ba["username"] == values[5]
 
 
 def test_basic_auth_add(invoke, sample, session):
@@ -737,6 +744,7 @@ def test_basic_auth_add(invoke, sample, session):
         "created_at",
         "id",
         "password",
+        "tags",
         "username",
         "",
     ]
@@ -749,7 +757,7 @@ def test_basic_auth_add(invoke, sample, session):
     bas = consumers.basic_auths(session, consumer["id"])
     ba = next(k for k in bas if k["id"] == id_)
     assert ba["password"] == values[3]
-    assert ba["username"] == values[4]
+    assert ba["username"] == values[5]
 
 
 def test_basic_auth_delete(invoke, sample, session):
@@ -811,6 +819,7 @@ def test_basic_auth_update(invoke, sample, session, username, passwd):
         "created_at",
         "id",
         "password",
+        "tags",
         "username",
         "",
     ]
@@ -824,7 +833,7 @@ def test_basic_auth_update(invoke, sample, session, username, passwd):
     ba = next(k for k in bas if k["id"] == id_)
     assert ba["password"] == values[3]
     assert ba["password"] == passwd or "passwd"
-    assert ba["username"] == values[4]
+    assert ba["username"] == values[5]
     assert ba["username"] == username or "user"
 
 
