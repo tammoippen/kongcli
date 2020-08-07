@@ -316,12 +316,12 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
         "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
     )
     @click.option(
-        "--white",
+        "--allow",
         multiple=True,
         help="Arbitrary group names that are allowed to consume the Service or Route. One of `config.whitelist` or `config.blacklist` must be specified.",
     )
     @click.option(
-        "--black",
+        "--deny",
         multiple=True,
         help="Arbitrary group names that are not allowed to consume the Service or Route. One of config.whitelist or config.blacklist must be specified.",
     )
@@ -336,8 +336,8 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
         ctx: click.Context,
         id_name: str,
         not_enabled: bool,
-        white: Tuple[str, ...],
-        black: Tuple[str, ...],
+        allow: Tuple[str, ...],
+        deny: Tuple[str, ...],
         hide_groups_header: bool,
     ) -> None:
         """Enable the acl plugin.
@@ -349,6 +349,8 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
         and all others are inherently rejected. By contrast, a blacklist configuration provides
         a negative security model, in which certain groups are explicitly denied access to
         the resource (and all others are inherently allowed)
+
+        From 0.14.1 onward, `whitelist` changed to `allow` and `blacklist` changed to `deny`.
         """
         session = ctx.obj["session"]
         tablefmt = ctx.obj["tablefmt"]
@@ -357,26 +359,33 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
             "enabled": not not_enabled,
             "config": {"hide_groups_header": hide_groups_header},
         }
-        if white and black:
+        if allow and deny:
             logger.error(
-                "Only one of whitelist (multiple `--white`) or blacklist (multiple `--black`) are allowed."
+                "Only one of whitelist (multiple `--allow`) or blacklist (multiple `--deny`) are allowed."
             )
             raise click.Abort()
-        if not white and not black:
+        if not allow and not deny:
             logger.error(
-                "One of whitelist (multiple `--white`) or blacklist (multiple `--black`) has to be set."
+                "One of whitelist (multiple `--allow`) or blacklist (multiple `--deny`) has to be set."
             )
             raise click.Abort()
 
         info = general.information(session)
 
-        if info["version"].startswith("0.13"):
+        parts = [int(v) for v in info["version"].split(".")]
+        if parts[0] == 0 and parts[1] <= 13:
             payload["config"].pop("hide_groups_header")
 
-        if white:
-            payload["config"]["whitelist"] = list(white)
-        if black:
-            payload["config"]["blacklist"] = list(black)
+        white_key = "whitelist"
+        black_key = "blacklist"
+        if parts[0] >= 1 or parts[1] >= 15 or (parts[1] == 14 and parts[2] >= 1):
+            white_key = "allow"
+            black_key = "deny"
+
+        if allow:
+            payload["config"][white_key] = list(allow)
+        if deny:
+            payload["config"][black_key] = list(deny)
 
         if resource != "global":
             plugin = plugins.enable_on(session, resource, id_name, "acl", **payload)

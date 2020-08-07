@@ -49,13 +49,14 @@ def list_services(ctx: click.Context, full_plugins: bool) -> None:
         }
         for p in plugins_data:
             substitude_ids(p)
-            if p.get("service.id") is None:
-                # kong 1.x sets service to none, if plugin is not accoziated to a service
-                continue
             if s["id"] == p.get("service.id"):
                 if p["name"] == "acl":
-                    sdata["whitelist"] |= set(p["config"].get("whitelist", []))
-                    sdata["blacklist"] |= set(p["config"].get("blacklist", []))
+                    sdata["whitelist"] |= set(p["config"].get("whitelist", [])) | set(
+                        p["config"].get("allow") or []
+                    )
+                    sdata["blacklist"] |= set(p["config"].get("blacklist", [])) | set(
+                        p["config"].get("deny") or []
+                    )
                 elif full_plugins:
                     sdata["plugins"] += [f"{p['name']}:\n{json_pretty(p['config'])}"]
                 else:
