@@ -44,7 +44,9 @@ def test_raw_single_data(invoke, clean_kong, kong_admin):
 
 
 def test_raw_single_data_dry_run(invoke, clean_kong, kong_admin):
-    result = invoke(["raw", "-d", "custom_id", "foobar", "POST", "/consumers", "--dry-run"])
+    result = invoke(
+        ["raw", "-d", "custom_id", "foobar", "POST", "/consumers", "--dry-run"]
+    )
     assert result.exit_code == 0
     assert result.stderr.startswith(f"> POST {kong_admin}/consumers\n")
     lines = result.stdout.split("\n")

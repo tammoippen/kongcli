@@ -74,7 +74,9 @@ def raw(
         return
 
     resp = session.request(method, url, headers=headers_dict, data=payload)
-    click.echo(f"\n< http/{resp.raw.version} {resp.status_code} {resp.reason}", err=True)
+    click.echo(
+        f"\n< http/{resp.raw.version} {resp.status_code} {resp.reason}", err=True
+    )
     for k, v in resp.headers.items():
         click.echo(f"< {k}: {v}", err=True)
     click.echo(err=True)
