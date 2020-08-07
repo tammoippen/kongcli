@@ -14,7 +14,7 @@ from ._plugins import (
     enable_request_size_limiting_services,
     enable_response_ratelimiting_services,
 )
-from ._util import get, json_pretty, parse_datetimes
+from ._util import get, json_pretty, parse_datetimes, substitude_ids
 from .kong import general
 
 
@@ -48,10 +48,11 @@ def list_services(ctx: click.Context, full_plugins: bool) -> None:
             "plugins": [],
         }
         for p in plugins_data:
-            if p.get("service", {}) is None:
+            substitude_ids(p)
+            if p.get("service.id") is None:
                 # kong 1.x sets service to none, if plugin is not accoziated to a service
                 continue
-            if s["id"] in (p.get("service_id"), p.get("service", {}).get("id")):
+            if s["id"] == p.get("service.id"):
                 if p["name"] == "acl":
                     sdata["whitelist"] |= set(p["config"].get("whitelist", []))
                     sdata["blacklist"] |= set(p["config"].get("blacklist", []))
