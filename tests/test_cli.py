@@ -6,7 +6,7 @@ from uuid import uuid4
 def test_info(invoke):
     result = invoke(["info"])
     assert result.exit_code == 0
-    assert re.match(r"[01]\.\d+(\.\d+)?", json.loads(result.output)["version"])
+    assert re.match(r"[012]\.\d+(\.\d+)?", json.loads(result.output)["version"])
 
 
 def test_status(invoke):

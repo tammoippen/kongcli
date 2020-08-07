@@ -6,13 +6,27 @@ import uuid
 
 import pytest
 
-from kongcli.kong.general import add, all_of, delete, information, retrieve, update
+from kongcli.kong.general import (
+    add,
+    all_of,
+    delete,
+    information,
+    retrieve,
+    status_call,
+    update,
+)
 
 
 def test_information(session):
     resp = information(session)
     assert isinstance(resp, dict)
-    assert re.match(r"[01]\.\d+(\.\d+)?", resp["version"])
+    assert re.match(r"[012]\.\d+(\.\d+)?", resp["version"])
+
+
+def test_status(session):
+    resp = status_call(session)
+    assert isinstance(resp, dict)
+    assert resp["database"]["reachable"]
 
 
 @pytest.mark.parametrize(

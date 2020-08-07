@@ -22,7 +22,7 @@ def test_raw_info(invoke, clean_kong, env, kong_admin):
             continue
         if line:
             # last non-empty line is a json
-            assert re.match(r"[01]\.\d+(\.\d+)?", json.loads(line)["version"])
+            assert re.match(r"[012]\.\d+(\.\d+)?", json.loads(line)["version"])
             break
 
 
