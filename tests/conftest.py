@@ -72,7 +72,7 @@ def clean_kong(kong_pg_host):
                FROM information_schema.tables
                WHERE table_schema = 'public' AND table_name <> 'schema_migrations';"""
         )
-        tables = [row[0] for row in cursor.fetchall()]
+        tables = [row[0] for row in cursor.fetchall() if row[0] not in {"workspaces"}]
         cursor.execute(f"TRUNCATE TABLE {', '.join(tables)} CASCADE;")
 
 

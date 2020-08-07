@@ -45,12 +45,15 @@ def test_delete_non_exsiting_acl(session, clean_kong):
     consumer = add("consumers", session, username="test-user", custom_id="1234")
     with pytest.raises(Exception) as e:
         consumers.delete_group(session, consumer["id"], "some-group")
-    assert str(e.value).strip() == '404 Not Found: {"message":"Not found"}'
+    assert str(e.value).startswith("404 Not Found")
+    assert '"message":"Not found"' in str(e.value)
+
     # also with other group we get an error
     consumers.add_group(session, consumer["id"], "some-nice-group1")
     with pytest.raises(Exception) as e:
         consumers.delete_group(session, consumer["id"], "some-group")
-    assert str(e.value).strip() == '404 Not Found: {"message":"Not found"}'
+    assert str(e.value).startswith("404 Not Found")
+    assert '"message":"Not found"' in str(e.value)
 
 
 def test_no_basic_auths(session, clean_kong):
