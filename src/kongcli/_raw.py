@@ -7,6 +7,9 @@ from ._util import dict_from_dot, json_dumps
 
 
 @click.command()
+@click.option(
+    "--dry-run", is_flag=True, help="Only create the request without sending it."
+)
 @click.option("--header", "-H", type=(str, str), multiple=True, help="Add headers.")
 @click.option(
     "--data",
@@ -24,6 +27,7 @@ def raw(
     url: str,
     header: Tuple[Tuple[str, str], ...],
     data: Tuple[Tuple[str, str], ...],
+    dry_run: bool,
 ) -> None:
     """Perform raw http requests to kong.
 
@@ -52,9 +56,7 @@ def raw(
     session: LiveServerSession = ctx.obj["session"]
     headers_dict = {h[0]: h[1] for h in header}
     click.echo(f"> {method} {session.prefix_url}{url}", err=True)
-    for k, v in session.headers.items():
-        click.echo(f"> {k}: {v}", err=True)
-    for k, v in headers_dict.items():
+    for k, v in {**session.headers, **headers_dict}.items():
         click.echo(f"> {k}: {v}", err=True)
     click.echo(">", err=True)
 
@@ -65,10 +67,14 @@ def raw(
         payload = json_dumps(payload)
         headers_dict["content-type"] = "application/json"
         click.echo("> Body:", err=True)
-        click.echo(f">{payload}", err=True)
+        click.echo(f"> {payload}", err=True)
+
+    if dry_run:
+        click.echo("---<<== Done with dry-run. ==>>---")
+        return
 
     resp = session.request(method, url, headers=headers_dict, data=payload)
-    click.echo(f"< http/{resp.raw.version} {resp.status_code} {resp.reason}", err=True)
+    click.echo(f"\n< http/{resp.raw.version} {resp.status_code} {resp.reason}", err=True)
     for k, v in resp.headers.items():
         click.echo(f"< {k}: {v}", err=True)
     click.echo(err=True)

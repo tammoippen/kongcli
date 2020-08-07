@@ -17,7 +17,7 @@ This is a command line interface (cli) to configure the awesome [kong](https://k
 
 At work we use(d) a kong 0.13.x, hence the CLI's were either outdated or not ready. As with the GUI... it was to much overhead for my case. Then I collected some `*.http` files for the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client), but was never really satisfied with the 'UI'.
 
-I started this project for _my most used endpoints_, i.e. there is a lot of not-implemented endpoints - if you need them, consider the [`raw`](#raw) command or provide a PR ;) . I plan to make it compatible with **kong >= 0.13.x** - currently, CI tests with latest docker images for 0.13, 0.14, 0.15, 1.0, 1.1, 1.2 and 1.3.
+I started this project for _my most used endpoints_, i.e. there is a lot of not-implemented endpoints - if you need them, consider the [`raw`](#raw) command or provide a PR ;) . I plan to make it compatible with **kong >= 0.13.x** - currently, CI tests with latest docker images for 0.13, 0.14, 0.15, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0 and 2.1.
 
 ## installation
 
@@ -113,6 +113,9 @@ Usage: kongcli raw [OPTIONS] METHOD URL
   `--data / -d` will merge the dictionary.
 
 Options:
+  --dry-run                    Only create the request without sending it.
+                               [default: False]
+
   -H, --header <TEXT TEXT>...  Add headers.
   -d, --data <TEXT TEXT>...    Add key-value data points to the payload.
   -h, --help                   Show this message and exit.
