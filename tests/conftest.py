@@ -17,7 +17,12 @@ def invoke(session):
     runner = CliRunner(mix_stderr=False)
 
     def _invoke(args: List[str], **kwargs):
-        return runner.invoke(cli, args, obj={"session": session}, **kwargs)
+        obj = kwargs.pop("obj", None)
+        if obj is None:
+            obj = {}
+        if "session" not in obj:
+            obj["session"] = session
+        return runner.invoke(cli, args, obj=obj, **kwargs)
 
     return _invoke
 

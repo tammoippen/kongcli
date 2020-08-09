@@ -16,9 +16,9 @@ def test_status(invoke):
 
 
 def test_version(invoke):
-    result = invoke(["version"])
+    result = invoke(["--version"])
     assert result.exit_code == 0
-    assert re.match(r"^kongcli v\d+\.\d+.\d+$", result.output.strip())
+    assert re.match(r"^kongcli, version \d+\.\d+.\d+$", result.output.strip())
 
 
 def test_logging_debug(invoke):

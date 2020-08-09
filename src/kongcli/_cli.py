@@ -35,7 +35,9 @@ from .kong.general import information, status_call
     default="banner",
     help="Font for the table headers. See http://www.figlet.org/examples.html for examples.",
 )
-@click.version_option(version=pkg_resources.get_distribution("kongcli").version)
+@click.version_option(
+    version=pkg_resources.get_distribution("kongcli").version, prog_name="kongcli"
+)
 @click.option("-v", "--verbose", count=True, help="Add more verbose output.")
 @click.pass_context
 def cli(
@@ -74,6 +76,7 @@ def cli(
         # injected in the testing
         session = LiveServerSession(url)
         ctx.obj["session"] = session
+    logger.debug(f"Will use `{session.prefix_url}` as prefix for every request.")
 
     if apikey:
         session.headers.update({"apikey": apikey})

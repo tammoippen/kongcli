@@ -9,7 +9,6 @@ class LiveServerSession(Session):
         super(LiveServerSession, self).__init__()
         while prefix_url.endswith("/"):
             prefix_url = prefix_url[:-1]
-        logger.debug(f"Will use `{prefix_url}` as prefix for every request.")
         self.prefix_url = prefix_url
 
     def request(  # type: ignore
