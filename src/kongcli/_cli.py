@@ -35,6 +35,7 @@ from .kong.general import information, status_call
     default="banner",
     help="Font for the table headers. See http://www.figlet.org/examples.html for examples.",
 )
+@click.version_option(version=pkg_resources.get_distribution("kongcli").version)
 @click.option("-v", "--verbose", count=True, help="Add more verbose output.")
 @click.pass_context
 def cli(
@@ -68,7 +69,12 @@ def cli(
     if verbose >= 3:
         logger.add(sys.stderr, level="DEBUG")
 
-    session = LiveServerSession(url)
+    session: Optional[LiveServerSession] = ctx.obj.get("session")
+    if session is None:
+        # injected in the testing
+        session = LiveServerSession(url)
+        ctx.obj["session"] = session
+
     if apikey:
         session.headers.update({"apikey": apikey})
     if basic and not passwd:
@@ -76,7 +82,6 @@ def cli(
     if basic and passwd:
         session.auth = (basic, passwd)
 
-    ctx.obj["session"] = session
     ctx.obj["tablefmt"] = tablefmt
     ctx.obj["font"] = font
 
@@ -108,12 +113,6 @@ def status(ctx: click.Context) -> None:
     """Show status information on the kong instance."""
     info = get("status", lambda: status_call(ctx.obj["session"]))
     click.echo(json_pretty(info))
-
-
-@cli.command()
-def version() -> None:
-    """Show version of kongcli."""
-    click.echo(f"kongcli v{pkg_resources.get_distribution('kongcli').version}")
 
 
 @cli.group(name="list", chain=True)

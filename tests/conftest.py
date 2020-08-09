@@ -13,11 +13,11 @@ from kongcli.kong.general import add, information
 
 
 @pytest.fixture()
-def invoke():
+def invoke(session):
     runner = CliRunner(mix_stderr=False)
 
     def _invoke(args: List[str], **kwargs):
-        return runner.invoke(cli, args, **kwargs)
+        return runner.invoke(cli, args, obj={"session": session}, **kwargs)
 
     return _invoke
 

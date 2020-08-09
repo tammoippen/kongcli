@@ -51,10 +51,10 @@ def list_services(ctx: click.Context, full_plugins: bool) -> None:
             substitude_ids(p)
             if s["id"] == p.get("service.id"):
                 if p["name"] == "acl":
-                    sdata["whitelist"] |= set(p["config"].get("whitelist", [])) | set(
+                    sdata["whitelist"] |= set(p["config"].get("whitelist") or []) | set(
                         p["config"].get("allow") or []
                     )
-                    sdata["blacklist"] |= set(p["config"].get("blacklist", [])) | set(
+                    sdata["blacklist"] |= set(p["config"].get("blacklist") or []) | set(
                         p["config"].get("deny") or []
                     )
                 elif full_plugins:

@@ -373,12 +373,12 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
         info = general.information(session)
 
         parts = [int(v) for v in info["version"].split(".")]
-        if parts[0] == 0 and parts[1] <= 13:
+        if parts[0] == 0 and parts[1] <= 13 or (parts[1] == 14 and parts[2] < 1):
             payload["config"].pop("hide_groups_header")
 
         white_key = "whitelist"
         black_key = "blacklist"
-        if parts[0] >= 1 or parts[1] >= 15 or (parts[1] == 14 and parts[2] >= 1):
+        if parts[0] >= 2 and parts[1] >= 1:
             white_key = "allow"
             black_key = "deny"
 

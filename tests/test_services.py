@@ -59,14 +59,10 @@ def test_list_two_filled(invoke, sample, session, full_plugins, httpbin):
     service2 = general.add("services", session, name="httpbin2", url=httpbin)
     parse_datetimes(service2)
 
-    assert (
-        invoke(["services", "enable-acl", "--deny", "bar", service1["id"]]).exit_code
-        == 0
-    )
-    assert (
-        invoke(["services", "enable-acl", "--allow", "foo", service2["id"]]).exit_code
-        == 0
-    )
+    res = invoke(["services", "enable-acl", "--deny", "bar", service1["id"]])
+    assert res.exit_code == 0, res.output
+    res = invoke(["services", "enable-acl", "--allow", "foo", service2["id"]])
+    assert res.exit_code == 0, res.output
 
     result = invoke(
         ["--font", "cyberlarge", "--tablefmt", "psql", "services", "list"]
