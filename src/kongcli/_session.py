@@ -1,6 +1,5 @@
 from typing import Any
 
-from loguru import logger
 from requests import Response, Session
 
 
