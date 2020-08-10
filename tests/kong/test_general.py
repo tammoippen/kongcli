@@ -100,6 +100,8 @@ def test_update_no_data(resource, params, session, clean_kong, kong_version):
 
     if resource in ("services", "plugins") or kong_version >= 0.14:
         r2 = update(resource, session, r1["id"])
+        r1.pop("updated_at", None)
+        r2.pop("updated_at", None)
         assert r1 == r2
     else:
         with pytest.raises(Exception):
