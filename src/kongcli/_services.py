@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import click
 from loguru import logger
@@ -14,8 +14,33 @@ from ._plugins import (
     enable_request_size_limiting_services,
     enable_response_ratelimiting_services,
 )
-from ._util import get, json_pretty, parse_datetimes, substitude_ids
+from ._util import get, json_pretty, parse_datetimes, sort_dict, substitude_ids
 from .kong import general
+
+
+def sort_service_dict(obj: Any) -> Dict[str, Any]:
+    service = sort_dict(obj)
+    result = {}
+    for k in [
+        "id",
+        "name",
+        "tags",
+        "created_at",
+        "updated_at",
+        "protocol",
+        "host",
+        "port",
+        "path",
+        "retries",
+        "connect_timeout",
+        "read_timeout",
+        "write_timeout",
+    ]:
+        if k in service:
+            result[k] = service.pop(k)
+
+    assert service == {}
+    return result
 
 
 @click.command()
@@ -165,6 +190,8 @@ def add(
 
     service = general.add("services", session, **payload)
     parse_datetimes(service)
+    service = sort_service_dict(service)
+
     click.echo(tabulate([service], headers="keys", tablefmt=tablefmt))
 
 

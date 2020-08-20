@@ -205,3 +205,79 @@ def test_list_two_plugins(invoke, sample, session, full_plugins, httpbin):
                     plugins.pop(row[-2])
                     break
             assert not plugins, f"Some plugin not found: {plugins}"
+
+
+def test_add_no_required(invoke, clean_kong):
+    result = invoke(["services", "add"])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert (
+        "If not using the shorthand-attribute `url`, at least `host` has to be set."
+        in result.stderr
+    )
+
+
+@pytest.mark.parametrize("other", ["protocol", "host", "port", "path"])
+def test_add_url_and_other(invoke, clean_kong, httpbin, other):
+    result = invoke(["services", "add", "--url", httpbin, f"--{other}", "fooo"])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert (
+        "If using the shorthand-attribute `url` the other options `protocol`, `host`, `port` and `path` will be ignored."
+        in result.stderr
+    )
+
+
+def test_add_url(invoke, clean_kong, httpbin_parsed, httpbin, now):
+    result = invoke(
+        [
+            "--font",
+            "cyberlarge",
+            "--tablefmt",
+            "psql",
+            "services",
+            "add",
+            "--url",
+            httpbin,
+        ]
+    )
+    assert result.exit_code == 0
+    lines = [
+        [elem.strip() for elem in line.split("|")] for line in result.stdout.split("\n")
+    ]
+    assert lines[1] == [
+        "",
+        "id",
+        "name",
+        "tags",
+        "created_at",
+        "updated_at",
+        "protocol",
+        "host",
+        "port",
+        "path",
+        "retries",
+        "connect_timeout",
+        "read_timeout",
+        "write_timeout",
+        "",
+    ]
+    assert lines[3][4] >= now
+    assert lines[3][5] >= now
+    assert lines[3] == [
+        "",
+        lines[3][1],  # "id",
+        "",
+        "",
+        lines[3][4],
+        lines[3][5],
+        httpbin_parsed.scheme,
+        httpbin_parsed.hostname,
+        str(httpbin_parsed.port),
+        "",
+        "5",
+        "60000",
+        "60000",
+        "60000",
+        "",
+    ]

@@ -1,5 +1,7 @@
+from datetime import datetime, timezone
 import os
 from typing import List
+from urllib.parse import urlparse
 
 from click.testing import CliRunner
 import psycopg2
@@ -8,7 +10,7 @@ import pytest
 
 from kongcli._cli import cli
 from kongcli._session import LiveServerSession
-from kongcli._util import _reset_cache, parse_datetimes
+from kongcli._util import _reset_cache, json_dumps, parse_datetimes
 from kongcli.kong.general import add, information
 
 
@@ -42,6 +44,11 @@ def kong_admin():
 
 
 @pytest.fixture()
+def now():
+    return json_dumps(datetime.now(tz=timezone.utc))
+
+
+@pytest.fixture()
 def kong_regular():
     host = os.environ.get("KONG_HOST", "localhost")
     port = os.environ.get("KONG_PORT", "8000")
@@ -53,6 +60,11 @@ def httpbin():
     host = os.environ.get("HTTPBIN_HOST", "localhost")
     port = os.environ.get("HTTPBIN_PORT", "8080")
     return f"http://{host}:{port}"
+
+
+@pytest.fixture()
+def httpbin_parsed(httpbin):
+    return urlparse(httpbin)
 
 
 @pytest.fixture()
