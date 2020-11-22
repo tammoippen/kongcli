@@ -217,9 +217,12 @@ def test_add_no_required(invoke, clean_kong):
     )
 
 
-@pytest.mark.parametrize("other", ["protocol", "host", "port", "path"])
-def test_add_url_and_other(invoke, clean_kong, httpbin, other):
-    result = invoke(["services", "add", "--url", httpbin, f"--{other}", "fooo"])
+@pytest.mark.parametrize(
+    "other,value",
+    [("protocol", "http"), ("host", "foooo"), ("port", 1234), ("path", "/api/fooo")],
+)
+def test_add_url_and_other(invoke, clean_kong, httpbin, other, value):
+    result = invoke(["services", "add", "--url", httpbin, f"--{other}", value])
     assert result.exit_code == 1
     assert isinstance(result.exception, SystemExit)
     assert (
