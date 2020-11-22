@@ -21,7 +21,9 @@ from .kong import general
 
 @click.command()
 @click.option(
-    "--full-plugins", is_flag=True, help="Whether to show full plugin config.",
+    "--full-plugins",
+    is_flag=True,
+    help="Whether to show full plugin config.",
 )
 @click.pass_context
 def list_routes(ctx: click.Context, full_plugins: bool) -> None:

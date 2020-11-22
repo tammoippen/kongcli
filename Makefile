@@ -1,15 +1,21 @@
 THIS_FILE := $(lastword $(MAKEFILE_LIST))
 
+include .testenv
+export $(shell sed 's/=.*//' .testenv)
+
 format:
-	black .
+	poetry run black .
 
 statics:
-	black --check .
-	flake8
-	mypy src
+	poetry run black --check .
+	poetry run flake8
+	poetry run mypy src
 
 tests:
-	pytest
+	poetry run pytest
+
+docker:
+	docker-compose up --force-recreate --renew-anon-volumes  --detach
 
 ci:
 	poetry install
@@ -21,4 +27,4 @@ coveralls:
 	pip install coveralls
 	coveralls
 
-.PHONY: format statics tests ci
+.PHONY: format statics tests ci docker

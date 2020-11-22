@@ -129,3 +129,6 @@ list_cmd.add_command(list_consumers, name="consumers")
 list_cmd.add_command(list_global_plugins, name="global-plugins")
 list_cmd.add_command(list_routes, name="routes")
 list_cmd.add_command(list_services, name="services")
+
+if __name__ == "__main__":
+    cli()

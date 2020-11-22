@@ -96,7 +96,9 @@ def _enable_basic_auth_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-basic-auth-on-{resource}")
     @click.option(
-        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
+        "--not-enabled",
+        is_flag=True,
+        help="Whether this plugin will be applied.",
     )
     @click.option(
         "--hide_credentials",
@@ -224,7 +226,9 @@ def _enable_key_auth_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-key-auth-on-{resource}")
     @click.option(
-        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
+        "--not-enabled",
+        is_flag=True,
+        help="Whether this plugin will be applied.",
     )
     @click.option(
         "--key_names",
@@ -313,7 +317,9 @@ def _enable_acl_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-acl-on-{resource}")
     @click.option(
-        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
+        "--not-enabled",
+        is_flag=True,
+        help="Whether this plugin will be applied.",
     )
     @click.option(
         "--allow",
@@ -413,7 +419,9 @@ def _enable_rate_limiting_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-rate-limiting-on-{resource}")
     @click.option(
-        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
+        "--not-enabled",
+        is_flag=True,
+        help="Whether this plugin will be applied.",
     )
     @click.option(
         "--second",
@@ -601,7 +609,9 @@ def _enable_response_ratelimiting_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-response-ratelimiting-on-{resource}")
     @click.option(
-        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
+        "--not-enabled",
+        is_flag=True,
+        help="Whether this plugin will be applied.",
     )
     @click.option(
         "--second",
@@ -833,7 +843,9 @@ def _enable_request_size_limiting_on_resource(resource: str) -> click.Command:
 
     @click.command(name=f"enable-request-size-limiting-on-{resource}")
     @click.option(
-        "--not-enabled", is_flag=True, help="Whether this plugin will be applied.",
+        "--not-enabled",
+        is_flag=True,
+        help="Whether this plugin will be applied.",
     )
     @click.option(
         "--allowed_payload_size",

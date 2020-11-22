@@ -45,7 +45,9 @@ def sort_service_dict(obj: Any) -> Dict[str, Any]:
 
 @click.command()
 @click.option(
-    "--full-plugins", is_flag=True, help="Whether to show full plugin config.",
+    "--full-plugins",
+    is_flag=True,
+    help="Whether to show full plugin config.",
 )
 @click.pass_context
 def list_services(ctx: click.Context, full_plugins: bool) -> None:
