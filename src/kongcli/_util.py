@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
-from typing import Any, Callable, Dict, Sequence, Tuple
+from typing import Any, Callable, Dict, Optional, Sequence, Tuple
 
 from cachetools import LRUCache
 from loguru import logger
 import orjson
 
-CACHE = None
+CACHE: Optional[LRUCache] = None
 
 
 def get(key: str, fkt: Callable[[], Any]) -> Any:
